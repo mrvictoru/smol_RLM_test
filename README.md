@@ -135,6 +135,40 @@ print(result.response)
 print(result.metadata)   # recursive call tree (JSON-serialisable)
 ```
 
+### Inspecting the prompts sent to the LLM server
+
+If you want to inspect the exact message payloads sent by smolagents at each
+recursive level, enable prompt tracing:
+
+```python
+from src.rlm_smolagent import RLMAgent
+
+agent = RLMAgent(
+    base_url="http://localhost:8080/v1",
+    model_name="local-model",
+    capture_prompt_traces=True,
+)
+
+result = agent.completion("Break this task into subproblems and solve it.")
+
+# Flat list of every outbound request across the full recursion tree.
+for request in result.iter_llm_requests():
+    print(request["depth"], request["phase"])
+    for message in request["messages"]:
+        print(message["role"], message.get("content", ""))
+
+# Pretty-printed text report for notebook exploration.
+print(result.format_prompt_trace())
+```
+
+Each node in `result.metadata["call_tree"]` now includes an `llm_requests`
+array. For agent-driven nodes this captures each step that smolagents sends to
+the OpenAI-compatible server; for depth-limit fallback nodes it captures the
+single plain completion request.
+
+For a deeper walk-through of the internal flow, see
+[docs/rlm_agent_flow.md](docs/rlm_agent_flow.md).
+
 ---
 
 ## References
