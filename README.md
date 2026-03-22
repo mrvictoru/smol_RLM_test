@@ -8,7 +8,8 @@ the [smolagents](https://github.com/huggingface/smolagents) library and a local
 
 The whole environment runs inside a **Docker container** and exposes a
 **Jupyter notebook server** so you can interactively inspect and experiment with
-the recursive calling process.
+the recursive calling process. The repo also includes a standalone HTML slide
+deck for presenting the ideas before switching into the live notebook demo.
 
 ---
 
@@ -97,7 +98,18 @@ Navigate to **http://localhost:8888** in your browser.
 | Notebook | Description |
 |---|---|
 | `01_rlm_basics.ipynb` | Core concepts, architecture, simple examples |
-| `02_rlm_experiments.ipynb` | Needle-in-a-Haystack, hierarchical summarisation, call-tree logging |
+| `02_rlm_experiments.ipynb` | Session-ready demo flow: letter counting, prompt tracing, Needle-in-a-Haystack, hierarchical summarisation |
+
+### 5. Open the presentation slides
+
+Open `docs/rlm_session_slides.html` directly in a browser for a lightweight
+slide deck that mirrors the notebook walkthrough.
+
+Suggested flow for a live session:
+
+1. Start with the HTML slides to explain the motivation.
+2. Move to `02_rlm_experiments.ipynb` for the letter-counting demo.
+3. Continue in the notebook for the recursive examples and prompt tracing.
 
 ---
 
@@ -108,6 +120,9 @@ Navigate to **http://localhost:8888** in your browser.
 ├── Dockerfile              # Python 3.12 + Jupyter + smolagents
 ├── docker-compose.yml      # container orchestration
 ├── requirements.txt        # Python dependencies
+├── docs/
+│   ├── rlm_agent_flow.md   # internal flow and prompt-tracing notes
+│   └── rlm_session_slides.html
 ├── src/
 │   └── rlm_smolagent.py    # RLMAgent — core implementation
 └── notebooks/
@@ -168,6 +183,10 @@ single plain completion request.
 
 For a deeper walk-through of the internal flow, see
 [docs/rlm_agent_flow.md](docs/rlm_agent_flow.md).
+
+For a presentation-friendly walkthrough that starts with the letter-counting
+example and then transitions into RLM internals, open
+[docs/rlm_session_slides.html](docs/rlm_session_slides.html).
 
 ---
 

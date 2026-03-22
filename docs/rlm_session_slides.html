@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Language Models - Session Slides</title>
+  <style>
+    :root {
+      --bg: #f4efe4;
+      --panel: #fffaf0;
+      --ink: #1f1a17;
+      --muted: #62584f;
+      --accent: #0d6b61;
+      --accent-2: #c86b34;
+      --accent-3: #ead6b8;
+      --shadow: rgba(45, 33, 19, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(200, 107, 52, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(13, 107, 97, 0.18), transparent 30%),
+        linear-gradient(135deg, #f6f1e7 0%, #efe7d8 55%, #efe4cf 100%);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", "Aptos", "Segoe UI Variable Text", sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .deck {
+      height: 100%;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 4.5rem 6rem 5rem;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 1.75rem;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(4%);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(13, 107, 97, 0.1);
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      line-height: 1.05;
+      font-family: "Aptos Display", "IBM Plex Sans", sans-serif;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 6vw, 5.6rem);
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(2.3rem, 4vw, 4rem);
+      max-width: 14ch;
+    }
+
+    p,
+    li,
+    td,
+    th {
+      font-size: clamp(1.05rem, 1.6vw, 1.45rem);
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    .lead {
+      max-width: 42rem;
+      font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+      color: var(--muted);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .content.single {
+      grid-template-columns: 1fr;
+      max-width: 76rem;
+    }
+
+    .card,
+    .code,
+    .callout {
+      background: rgba(255, 250, 240, 0.82);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .card,
+    .callout {
+      padding: 1.4rem 1.6rem;
+    }
+
+    .code {
+      padding: 1.25rem 1.4rem;
+      background: #1f2a2b;
+      color: #f9f7f2;
+      overflow: auto;
+      font-family: "IBM Plex Mono", "Cascadia Code", monospace;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.4rem;
+    }
+
+    li + li {
+      margin-top: 0.7rem;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .metric {
+      padding: 1.2rem;
+      border-radius: 22px;
+      background: var(--panel);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+      color: var(--accent);
+    }
+
+    .comparison {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 22px;
+      background: rgba(255, 250, 240, 0.88);
+      box-shadow: 0 18px 50px var(--shadow);
+    }
+
+    .comparison th,
+    .comparison td {
+      padding: 1rem 1.1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 26, 23, 0.08);
+      vertical-align: top;
+    }
+
+    .comparison th {
+      background: rgba(13, 107, 97, 0.1);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .accent {
+      color: var(--accent-2);
+      font-weight: 700;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .progress {
+      width: min(26rem, 100%);
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(31, 26, 23, 0.08);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 200ms ease;
+    }
+
+    .nav {
+      position: fixed;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+      z-index: 10;
+    }
+
+    .nav button {
+      border: 0;
+      border-radius: 999px;
+      padding: 0.8rem 1rem;
+      background: rgba(31, 26, 23, 0.9);
+      color: #fffaf0;
+      cursor: pointer;
+      font: inherit;
+      box-shadow: 0 12px 30px rgba(31, 26, 23, 0.22);
+    }
+
+    .nav button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .flow-step {
+      padding: 1rem;
+      border-radius: 20px;
+      background: rgba(255, 250, 240, 0.92);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      position: relative;
+    }
+
+    .flow-step strong {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .quote {
+      padding-left: 1rem;
+      border-left: 4px solid var(--accent-2);
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 40rem;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .slide {
+        position: static;
+        min-height: 100vh;
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+        padding: 2rem 1.25rem 5rem;
+      }
+
+      .content,
+      .flow,
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav,
+      .footer .progress {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-label="Recursive Language Models session slides">
+    <section class="slide active">
+      <header>
+        <div class="eyebrow">Session opener</div>
+        <h1>Recursive Language Models</h1>
+      </header>
+      <div class="content">
+        <div>
+          <p class="lead">Start with a simple failure mode, then show how code execution and recursive decomposition change what an LLM can do.</p>
+          <div class="metric-grid">
+            <div class="metric">
+              <strong>1</strong>
+              <span>Letter counting as the warm-up demo</span>
+            </div>
+            <div class="metric">
+              <strong>2</strong>
+              <span>Python REPL as a reliability upgrade</span>
+            </div>
+            <div class="metric">
+              <strong>3</strong>
+              <span>RLM as tool use plus self-decomposition</span>
+            </div>
+          </div>
+        </div>
+        <aside class="card">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Talk arc</h2>
+          <ol>
+            <li>Why plain LLMs struggle with exact symbolic tasks</li>
+            <li>Why letting the model write Python helps</li>
+            <li>Why recursion helps when the task is too big for one pass</li>
+            <li>How prompt tracing makes the mechanism inspectable</li>
+          </ol>
+        </aside>
+      </div>
+      <footer class="footer">
+        <span>Use arrow keys or the buttons to move through the deck.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Warm-up demo</div>
+        <h2>Why start with letter counting?</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <p>Ask the audience:</p>
+          <div class="code">How many times does the letter "r" appear in "strawberry"?</div>
+          <p class="quote">This looks trivial, but token-based generation is not the same thing as exact character-level computation.</p>
+        </div>
+        <aside class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">What this demonstrates</h2>
+          <ul>
+            <li>LLMs are strong at pattern completion, not guaranteed exact counting</li>
+            <li>Small symbolic tasks can expose brittle reasoning</li>
+            <li>This makes a strong setup for showing why external tools matter</li>
+          </ul>
+        </aside>
+      </div>
+      <footer class="footer">
+        <span>Open the notebook next and run the counting demo.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Tool use</div>
+        <h2>Let the model write Python instead of guessing</h2>
+      </header>
+      <div class="content">
+        <div class="code">count_word = "strawberry"
+target_letter = "r"
+
+count_prompt = """
+Count how many times the letter 'r' appears in 'strawberry'.
+
+Important: do not answer from intuition.
+Use Python code in the REPL to compute the answer exactly.
+"""
+
+count_result = count_agent.completion(count_prompt)</div>
+        <aside class="card">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Message to the audience</h2>
+          <ul>
+            <li>The improvement is not magic. We changed the execution model.</li>
+            <li>The LLM can externalize the hard part into code.</li>
+            <li>The answer becomes deterministic because Python is doing the counting.</li>
+          </ul>
+        </aside>
+      </div>
+      <footer class="footer">
+        <span>The notebook now exposes the exact prompt used for this demo.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Bridge</div>
+        <h2>From code execution to Recursive Language Models</h2>
+      </header>
+      <div class="content single">
+        <div class="flow">
+          <div class="flow-step">
+            <strong>Step 1</strong>
+            Plain LLMs try to solve everything in one pass inside a token stream.
+          </div>
+          <div class="flow-step">
+            <strong>Step 2</strong>
+            A CodeAgent lets the model write Python when exact computation helps.
+          </div>
+          <div class="flow-step">
+            <strong>Step 3</strong>
+            An RLM lets the model create smaller subproblems with <span class="accent">rlm_call(sub_prompt)</span>.
+          </div>
+          <div class="flow-step">
+            <strong>Step 4</strong>
+            Parent and child calls form a recursive tree that can be inspected after the run.
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Tool use solves exact substeps. RLM adds self-decomposition.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Core idea</div>
+        <h2>Standard LLM call vs. RLM call</h2>
+      </header>
+      <div class="content single">
+        <table class="comparison">
+          <thead>
+            <tr>
+              <th>Mode</th>
+              <th>What the model can do</th>
+              <th>Main limitation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Plain LLM</td>
+              <td>Answer directly from a single prompt</td>
+              <td>Context window and one-shot reasoning limit</td>
+            </tr>
+            <tr>
+              <td>CodeAgent</td>
+              <td>Write Python to compute or inspect intermediate results</td>
+              <td>Still solving one logical task frame at a time</td>
+            </tr>
+            <tr>
+              <td>RLM</td>
+              <td>Write code <em>and</em> recursively call child agents on subprompts</td>
+              <td>Needs orchestration, depth limits, and traceability</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="footer">
+        <span>RLM is not a different model. It is a different inference pattern.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Mechanism</div>
+        <h2>How RLMAgent works internally</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <ol>
+            <li><strong>completion(prompt)</strong> creates the root call node.</li>
+            <li><strong>_run(...)</strong> builds a CodeAgent and injects the <strong>rlm_call</strong> tool.</li>
+            <li>The model decides whether to answer directly or delegate subproblems.</li>
+            <li>Each child call creates its own node in the recursive tree.</li>
+            <li>If the depth limit is reached, the code falls back to a plain completion.</li>
+            <li>The tree and all traced prompts are returned in metadata.</li>
+          </ol>
+        </div>
+        <div class="code">completion(prompt)
+  -> _run(prompt, depth=0)
+      -> CodeAgent(REPL + rlm_call)
+          -> rlm_call(sub_prompt)
+              -> _run(sub_prompt, depth + 1)
+              -> or _plain_completion(sub_prompt)
+      -> aggregate child results
+  -> return response + call_tree + llm_requests</div>
+      </div>
+      <footer class="footer">
+        <span>Use the notebook trace cells to make this concrete.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Observability</div>
+        <h2>Prompt tracing makes the agent explainable</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <p>With <strong>capture_prompt_traces=True</strong>, you can inspect the exact messages sent to the LLM server at each step.</p>
+          <ul>
+            <li>Root agent prompt</li>
+            <li>Child prompts from <strong>rlm_call</strong></li>
+            <li>Plain fallback payloads at max depth</li>
+          </ul>
+        </div>
+        <div class="code">trace_result = trace_agent.completion(trace_prompt)
+
+for request in trace_result.iter_llm_requests():
+    print(request["depth"], request["phase"])
+    for message in request["messages"]:
+        print(message["role"], message.get("content", ""))</div>
+      </div>
+      <footer class="footer">
+        <span>This is useful for demos, debugging, and explaining the mechanism live.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Demo flow</div>
+        <h2>Recommended session sequence</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <ol>
+            <li>Show the letter-counting question</li>
+            <li>Run the counting demo in the notebook</li>
+            <li>Reveal the prompt trace for that demo</li>
+            <li>Explain the jump from tool use to recursion</li>
+            <li>Run Needle-in-a-Haystack</li>
+            <li>Run hierarchical summarisation</li>
+            <li>End with prompt tracing and saved metadata</li>
+          </ol>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
+          <p>The audience sees a concrete reliability win first. Once they accept that the model can use external execution, recursive self-decomposition feels like a natural next step instead of a theoretical abstraction.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Slides establish the mental model. The notebook provides the live evidence.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Closing</div>
+        <h2>One-sentence summary</h2>
+      </header>
+      <div class="content single">
+        <div class="card">
+          <p class="lead" style="max-width:none; color:var(--ink);">A Recursive Language Model is an inference pattern where the model can write code, break a task into subproblems, call itself on those subproblems, and then combine the results into a final answer.</p>
+          <p class="quote">Plain LLM: one shot. CodeAgent: one shot plus tools. RLM: tools plus self-decomposition.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Deck file: docs/rlm_session_slides.html</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+  </main>
+
+  <div class="nav" aria-label="Slide controls">
+    <button id="prev" type="button">Prev</button>
+    <button id="next" type="button">Next</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const progressBars = Array.from(document.querySelectorAll('.progress > span'));
+    const prevButton = document.getElementById('prev');
+    const nextButton = document.getElementById('next');
+    let current = 0;
+
+    function renderSlides() {
+      slides.forEach((slide, index) => {
+        slide.classList.toggle('active', index === current);
+      });
+
+      const percentage = ((current + 1) / slides.length) * 100;
+      progressBars.forEach((bar) => {
+        bar.style.width = `${percentage}%`;
+      });
+
+      prevButton.disabled = current === 0;
+      nextButton.disabled = current === slides.length - 1;
+    }
+
+    function goNext() {
+      if (current < slides.length - 1) {
+        current += 1;
+        renderSlides();
+      }
+    }
+
+    function goPrev() {
+      if (current > 0) {
+        current -= 1;
+        renderSlides();
+      }
+    }
+
+    prevButton.addEventListener('click', goPrev);
+    nextButton.addEventListener('click', goNext);
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+        event.preventDefault();
+        goNext();
+      }
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+        event.preventDefault();
+        goPrev();
+      }
+      if (event.key === 'Home') {
+        current = 0;
+        renderSlides();
+      }
+      if (event.key === 'End') {
+        current = slides.length - 1;
+        renderSlides();
+      }
+    });
+
+    renderSlides();
+  </script>
+</body>
+</html>

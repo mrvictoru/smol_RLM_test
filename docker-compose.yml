@@ -12,7 +12,7 @@ services:
     environment:
       # URL of the llama.cpp server running on the host.
       # host-gateway resolves to the host machine inside the container.
-      - LLAMA_BASE_URL=${LLAMA_BASE_URL:-http://host-gateway:8080/v1}
+      - LLAMA_BASE_URL=${LLAMA_BASE_URL:-http://host-gateway:1337/v1}
       # Model name as expected by the llama.cpp server (can be overridden).
       - LLAMA_MODEL=${LLAMA_MODEL:-local-model}
       # Optional: OpenAI-compatible API key (llama.cpp accepts any non-empty string).
