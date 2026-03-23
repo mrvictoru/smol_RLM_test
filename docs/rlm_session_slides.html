@@ -14,6 +14,11 @@
       --accent-2: #c86b34;
       --accent-3: #ead6b8;
       --shadow: rgba(45, 33, 19, 0.14);
+      --slide-pad-x: clamp(1.5rem, 4vw, 6rem);
+      --slide-pad-top: clamp(1.5rem, 4.5vh, 4.5rem);
+      --slide-pad-bottom: clamp(1.25rem, 3.5vh, 3.5rem);
+      --footer-font: clamp(0.82rem, 1vw, 0.95rem);
+      --nav-offset: clamp(0.9rem, 2vw, 1.5rem);
     }
 
     * {
@@ -37,14 +42,15 @@
     }
 
     .deck {
-      height: 100%;
+      height: 100dvh;
+      min-height: 100vh;
       position: relative;
     }
 
     .slide {
       position: absolute;
       inset: 0;
-      padding: 4.5rem 6rem 5rem;
+      padding: var(--slide-pad-top) var(--slide-pad-x) var(--slide-pad-bottom);
       display: grid;
       grid-template-rows: auto 1fr auto;
       gap: 1.75rem;
@@ -52,6 +58,9 @@
       pointer-events: none;
       transform: translateX(4%);
       transition: opacity 220ms ease, transform 220ms ease;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable both-edges;
     }
 
     .slide.active {
@@ -117,6 +126,309 @@
     .content.single {
       grid-template-columns: 1fr;
       max-width: 76rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .hero-map {
+      display: grid;
+      gap: 0.9rem;
+      padding: 1.3rem;
+      min-height: 26rem;
+      border-radius: 32px;
+      background: linear-gradient(145deg, rgba(255, 250, 240, 0.96), rgba(244, 235, 220, 0.92));
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 20px 60px var(--shadow);
+    }
+
+    .map-card {
+      padding: 1rem 1.05rem;
+      border-radius: 22px;
+      background: rgba(255, 250, 240, 0.96);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 14px 30px rgba(31, 26, 23, 0.1);
+    }
+
+    .map-card strong {
+      display: block;
+      margin-bottom: 0.4rem;
+      color: var(--accent);
+      font-size: 1rem;
+    }
+
+    .map-card.root {
+      background: rgba(13, 107, 97, 0.12);
+    }
+
+    .map-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .map-arrow {
+      text-align: center;
+      color: var(--accent-2);
+      font-size: 1.7rem;
+      line-height: 1;
+    }
+
+    .letter-layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .letter-board {
+      padding: 1.2rem;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(239, 231, 216, 0.88));
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 18px 50px var(--shadow);
+    }
+
+    .letter-track {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+
+    .letter-box {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      background: rgba(255, 250, 240, 0.96);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      font-weight: 700;
+      font-size: 1.2rem;
+      box-shadow: 0 10px 24px rgba(31, 26, 23, 0.08);
+    }
+
+    .letter-box.hit {
+      background: rgba(200, 107, 52, 0.16);
+      color: var(--accent-2);
+      border-color: rgba(200, 107, 52, 0.35);
+    }
+
+    .letter-index {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    .count-chip-row {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .count-chip {
+      padding: 0.7rem 0.9rem;
+      border-radius: 16px;
+      background: rgba(13, 107, 97, 0.1);
+      color: var(--accent);
+      font-weight: 700;
+      border: 1px solid rgba(13, 107, 97, 0.18);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .pill {
+      padding: 0.6rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(13, 107, 97, 0.1);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    .split-visual {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .mode-card {
+      padding: 1.35rem;
+      border-radius: 28px;
+      box-shadow: 0 18px 50px var(--shadow);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      min-height: 18rem;
+    }
+
+    .mode-card h3,
+    .visual-title,
+    .mini-title {
+      margin: 0 0 0.75rem;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .mode-card.plain {
+      background: linear-gradient(180deg, rgba(200, 107, 52, 0.14), rgba(255, 250, 240, 0.94));
+    }
+
+    .mode-card.recursive {
+      background: linear-gradient(180deg, rgba(13, 107, 97, 0.14), rgba(255, 250, 240, 0.94));
+    }
+
+    .mode-stack {
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 1rem;
+    }
+
+    .stack-box {
+      padding: 0.8rem 0.9rem;
+      border-radius: 18px;
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      background: rgba(255, 250, 240, 0.9);
+      font-weight: 600;
+    }
+
+    .stack-box.child {
+      margin-left: 1.4rem;
+      background: rgba(13, 107, 97, 0.08);
+    }
+
+    .stack-box.leaf {
+      margin-left: 2.8rem;
+      background: rgba(200, 107, 52, 0.1);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .timeline-step {
+      position: relative;
+      padding: 1rem 1rem 1.1rem;
+      border-radius: 24px;
+      background: rgba(255, 250, 240, 0.9);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 14px 35px rgba(31, 26, 23, 0.12);
+    }
+
+    .timeline-step::after {
+      content: "→";
+      position: absolute;
+      right: -0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent-2);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .timeline-step:last-child::after {
+      display: none;
+    }
+
+    .timeline-step strong {
+      display: inline-block;
+      margin-bottom: 0.55rem;
+      color: var(--accent);
+    }
+
+    .tree-board {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1.2rem;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 250, 240, 0.95), rgba(239, 231, 216, 0.9));
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 18px 50px var(--shadow);
+    }
+
+    .tree-row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tree-box {
+      min-width: 13rem;
+      padding: 0.9rem 1rem;
+      border-radius: 20px;
+      background: rgba(255, 250, 240, 0.96);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      text-align: center;
+      box-shadow: 0 12px 28px rgba(31, 26, 23, 0.1);
+    }
+
+    .tree-box.root {
+      background: rgba(13, 107, 97, 0.12);
+    }
+
+    .tree-box.child {
+      background: rgba(234, 214, 184, 0.65);
+    }
+
+    .tree-box.leaf {
+      background: rgba(200, 107, 52, 0.12);
+    }
+
+    .tree-arrow {
+      text-align: center;
+      color: var(--accent-2);
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .terminal-board {
+      display: grid;
+      grid-template-columns: 1fr 0.95fr;
+      gap: 1rem;
+    }
+
+    .terminal-card {
+      padding: 1rem 1.05rem;
+      border-radius: 22px;
+      background: #172022;
+      color: #f7f4ed;
+      box-shadow: 0 18px 45px rgba(23, 32, 34, 0.28);
+      font-family: "IBM Plex Mono", "Cascadia Code", monospace;
+      white-space: pre-wrap;
+      font-size: 0.93rem;
+      line-height: 1.45;
+    }
+
+    .annotation-list {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .annotation {
+      padding: 0.95rem 1rem;
+      border-radius: 18px;
+      background: rgba(255, 250, 240, 0.92);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      box-shadow: 0 12px 28px rgba(31, 26, 23, 0.09);
+    }
+
+    .annotation strong {
+      color: var(--accent);
     }
 
     .card,
@@ -209,7 +521,9 @@
       justify-content: space-between;
       gap: 1rem;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: var(--footer-font);
+      flex-wrap: wrap;
+      padding-bottom: max(0.15rem, env(safe-area-inset-bottom));
     }
 
     .progress {
@@ -230,8 +544,8 @@
 
     .nav {
       position: fixed;
-      right: 1.5rem;
-      bottom: 1.5rem;
+      right: var(--nav-offset);
+      bottom: max(var(--nav-offset), env(safe-area-inset-bottom));
       display: flex;
       gap: 0.75rem;
       z-index: 10;
@@ -240,11 +554,12 @@
     .nav button {
       border: 0;
       border-radius: 999px;
-      padding: 0.8rem 1rem;
+      padding: 0.7rem 0.95rem;
       background: rgba(31, 26, 23, 0.9);
       color: #fffaf0;
       cursor: pointer;
       font: inherit;
+      font-size: 0.92rem;
       box-shadow: 0 12px 30px rgba(31, 26, 23, 0.22);
     }
 
@@ -282,6 +597,93 @@
       max-width: 40rem;
     }
 
+    @media (max-height: 900px) {
+      :root {
+        --slide-pad-top: clamp(1.1rem, 2.6vh, 2rem);
+        --slide-pad-bottom: clamp(0.9rem, 2.2vh, 1.5rem);
+      }
+
+      h1 {
+        font-size: clamp(2.35rem, 4.7vw, 4.2rem);
+      }
+
+      h2 {
+        font-size: clamp(1.9rem, 3.2vw, 3rem);
+      }
+
+      p,
+      li,
+      td,
+      th {
+        font-size: clamp(0.96rem, 1.25vw, 1.15rem);
+        line-height: 1.35;
+      }
+
+      .lead {
+        font-size: clamp(1.05rem, 1.45vw, 1.3rem);
+      }
+
+      .card,
+      .callout,
+      .code,
+      .metric,
+      .flow-step,
+      .mode-card,
+      .timeline-step,
+      .tree-board,
+      .terminal-card,
+      .annotation {
+        padding: 1rem 1.15rem;
+      }
+
+      .comparison th,
+      .comparison td {
+        padding: 0.8rem 0.9rem;
+      }
+
+      .footer .progress {
+        width: min(18rem, 100%);
+      }
+    }
+
+    @media (max-height: 760px) {
+      .content {
+        gap: 1.25rem;
+      }
+
+      .hero-grid,
+      .map-row,
+      .letter-layout,
+      .split-visual,
+      .timeline,
+      .terminal-board {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid,
+      .flow {
+        gap: 0.75rem;
+      }
+
+      .timeline-step::after {
+        display: none;
+      }
+
+      .footer .progress {
+        display: none;
+      }
+
+      .nav {
+        right: 0.9rem;
+        bottom: 0.9rem;
+      }
+
+      .nav button {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+      }
+    }
+
     @media (max-width: 980px) {
       body {
         overflow: auto;
@@ -289,14 +691,20 @@
 
       .slide {
         position: static;
-        min-height: 100vh;
+        min-height: 100dvh;
         opacity: 1;
         pointer-events: auto;
         transform: none;
-        padding: 2rem 1.25rem 5rem;
+        padding: 2rem 1.25rem 3.5rem;
       }
 
       .content,
+      .hero-grid,
+      .map-row,
+      .letter-layout,
+      .split-visual,
+      .timeline,
+      .terminal-board,
       .flow,
       .metric-grid {
         grid-template-columns: 1fr;
@@ -316,33 +724,37 @@
         <div class="eyebrow">Session opener</div>
         <h1>Recursive Language Models</h1>
       </header>
-      <div class="content">
+      <div class="hero-grid">
         <div>
           <p class="lead">Start with a simple failure mode, then show how code execution and recursive decomposition change what an LLM can do.</p>
-          <div class="metric-grid">
-            <div class="metric">
-              <strong>1</strong>
-              <span>Letter counting as the warm-up demo</span>
+          <div class="pill-row">
+            <span class="pill">Letter counting</span>
+            <span class="pill">Python REPL</span>
+            <span class="pill">Recursive calls</span>
+            <span class="pill">Prompt tracing</span>
+          </div>
+        </div>
+        <div class="hero-map" aria-label="Presentation concept map">
+          <div class="map-card root">
+            <strong>Central question</strong>
+            How do we make an LLM more reliable on tasks that are too exact, too long, or too complex for one shot?
+          </div>
+          <div class="map-arrow">↓</div>
+          <div class="map-row">
+            <div class="map-card">
+              <strong>Exact step</strong>
+              Let the model write Python for counting, searching, or aggregation.
             </div>
-            <div class="metric">
-              <strong>2</strong>
-              <span>Python REPL as a reliability upgrade</span>
+            <div class="map-card">
+              <strong>Large task</strong>
+              Let the model split the task into smaller prompts.
             </div>
-            <div class="metric">
-              <strong>3</strong>
-              <span>RLM as tool use plus self-decomposition</span>
+            <div class="map-card">
+              <strong>Transparency</strong>
+              Trace the prompts so the reasoning path is inspectable.
             </div>
           </div>
         </div>
-        <aside class="card">
-          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Talk arc</h2>
-          <ol>
-            <li>Why plain LLMs struggle with exact symbolic tasks</li>
-            <li>Why letting the model write Python helps</li>
-            <li>Why recursion helps when the task is too big for one pass</li>
-            <li>How prompt tracing makes the mechanism inspectable</li>
-          </ol>
-        </aside>
       </div>
       <footer class="footer">
         <span>Use arrow keys or the buttons to move through the deck.</span>
@@ -355,23 +767,101 @@
         <div class="eyebrow">Warm-up demo</div>
         <h2>Why start with letter counting?</h2>
       </header>
-      <div class="content">
-        <div class="card">
-          <p>Ask the audience:</p>
-          <div class="code">How many times does the letter "r" appear in "strawberry"?</div>
-          <p class="quote">This looks trivial, but token-based generation is not the same thing as exact character-level computation.</p>
+      <div class="letter-layout">
+        <div class="letter-board">
+          <div class="mini-title">Example word</div>
+          <div class="code" style="margin:0;">How many times does the letter "r" appear in "strawberry"?</div>
+          <div class="letter-track" aria-label="Letter positions in strawberry">
+            <div>
+              <div class="letter-box">s</div>
+              <div class="letter-index">1</div>
+            </div>
+            <div>
+              <div class="letter-box">t</div>
+              <div class="letter-index">2</div>
+            </div>
+            <div>
+              <div class="letter-box hit">r</div>
+              <div class="letter-index">3</div>
+            </div>
+            <div>
+              <div class="letter-box">a</div>
+              <div class="letter-index">4</div>
+            </div>
+            <div>
+              <div class="letter-box">w</div>
+              <div class="letter-index">5</div>
+            </div>
+            <div>
+              <div class="letter-box">b</div>
+              <div class="letter-index">6</div>
+            </div>
+            <div>
+              <div class="letter-box">e</div>
+              <div class="letter-index">7</div>
+            </div>
+            <div>
+              <div class="letter-box hit">r</div>
+              <div class="letter-index">8</div>
+            </div>
+            <div>
+              <div class="letter-box hit">r</div>
+              <div class="letter-index">9</div>
+            </div>
+            <div>
+              <div class="letter-box">y</div>
+              <div class="letter-index">10</div>
+            </div>
+          </div>
+          <div class="count-chip-row">
+            <div class="count-chip">Target letter: r</div>
+            <div class="count-chip">Exact count: 3</div>
+            <div class="count-chip">Why it matters: symbolic precision</div>
+          </div>
         </div>
         <aside class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">What this demonstrates</h2>
           <ul>
-            <li>LLMs are strong at pattern completion, not guaranteed exact counting</li>
-            <li>Small symbolic tasks can expose brittle reasoning</li>
-            <li>This makes a strong setup for showing why external tools matter</li>
+            <li>Humans can verify the answer by inspecting positions, but token prediction does not guarantee that behavior.</li>
+            <li>This is a small example of a broader issue: language fluency is not the same thing as exact computation.</li>
+            <li>It sets up the reason for using Python tools before introducing recursion.</li>
           </ul>
         </aside>
       </div>
       <footer class="footer">
         <span>Open the notebook next and run the counting demo.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Definition</div>
+        <h2>What is a Recursive Language Model?</h2>
+      </header>
+      <div class="split-visual">
+        <div class="mode-card plain">
+          <h3>Plain LLM</h3>
+          <p>One prompt in, one answer out.</p>
+          <div class="mode-stack">
+            <div class="stack-box">Prompt</div>
+            <div class="stack-box">Single forward reasoning pass</div>
+            <div class="stack-box">Answer</div>
+          </div>
+        </div>
+        <div class="mode-card recursive">
+          <h3>Recursive Language Model</h3>
+          <p>One task becomes a tree of smaller tasks.</p>
+          <div class="mode-stack">
+            <div class="stack-box">Root task</div>
+            <div class="stack-box child">Subtask A</div>
+            <div class="stack-box child">Subtask B</div>
+            <div class="stack-box leaf">Aggregate results</div>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>The key shift is from one-shot answering to staged problem solving.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -403,7 +893,7 @@ count_result = count_agent.completion(count_prompt)</div>
         </aside>
       </div>
       <footer class="footer">
-        <span>The notebook now exposes the exact prompt used for this demo.</span>
+        <span>The principle matters more than the specific task: use computation when language alone is brittle.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -414,27 +904,52 @@ count_result = count_agent.completion(count_prompt)</div>
         <h2>From code execution to Recursive Language Models</h2>
       </header>
       <div class="content single">
-        <div class="flow">
-          <div class="flow-step">
-            <strong>Step 1</strong>
-            Plain LLMs try to solve everything in one pass inside a token stream.
+        <div class="timeline">
+          <div class="timeline-step">
+            <strong>1. Ask</strong>
+            Model gets a task it cannot solve reliably in one shot.
           </div>
-          <div class="flow-step">
-            <strong>Step 2</strong>
-            A CodeAgent lets the model write Python when exact computation helps.
+          <div class="timeline-step">
+            <strong>2. Compute</strong>
+            CodeAgent lets it use Python for exact steps.
           </div>
-          <div class="flow-step">
-            <strong>Step 3</strong>
-            An RLM lets the model create smaller subproblems with <span class="accent">rlm_call(sub_prompt)</span>.
+          <div class="timeline-step">
+            <strong>3. Split</strong>
+            RLM lets it issue smaller prompts with <span class="accent">rlm_call</span>.
           </div>
-          <div class="flow-step">
-            <strong>Step 4</strong>
-            Parent and child calls form a recursive tree that can be inspected after the run.
+          <div class="timeline-step">
+            <strong>4. Merge</strong>
+            Parent collects local answers into one global answer.
           </div>
         </div>
       </div>
       <footer class="footer">
-        <span>Tool use solves exact substeps. RLM adds self-decomposition.</span>
+        <span>Tool use solves exact substeps. RLM adds self-decomposition across multiple reasoning stages.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Why it matters</div>
+        <h2>Why recursion helps</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <ul>
+            <li>Some tasks are too long to fit comfortably in one context window</li>
+            <li>Some tasks are easier if we solve local subproblems first</li>
+            <li>Some tasks benefit from a tree of intermediate results instead of one long prompt</li>
+          </ul>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Mental model</h2>
+          <p>Think of it as divide-and-conquer for inference: split, solve smaller pieces, then aggregate.</p>
+          <p>This is especially useful for search, summarisation, long-context reasoning, and structured analysis.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>RLMs trade a single large reasoning jump for a sequence of smaller ones.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -484,27 +999,79 @@ count_result = count_agent.completion(count_prompt)</div>
         <h2>How RLMAgent works internally</h2>
       </header>
       <div class="content">
-        <div class="card">
-          <ol>
-            <li><strong>completion(prompt)</strong> creates the root call node.</li>
-            <li><strong>_run(...)</strong> builds a CodeAgent and injects the <strong>rlm_call</strong> tool.</li>
-            <li>The model decides whether to answer directly or delegate subproblems.</li>
-            <li>Each child call creates its own node in the recursive tree.</li>
-            <li>If the depth limit is reached, the code falls back to a plain completion.</li>
-            <li>The tree and all traced prompts are returned in metadata.</li>
-          </ol>
+        <div class="tree-board">
+          <div class="tree-row">
+            <div class="tree-box root">
+              <strong>completion(prompt)</strong><br>
+              create root node
+            </div>
+          </div>
+          <div class="tree-arrow">↓</div>
+          <div class="tree-row">
+            <div class="tree-box child">
+              <strong>_run(...)</strong><br>
+              build CodeAgent
+            </div>
+            <div class="tree-box child">
+              <strong>rlm_call(...)</strong><br>
+              spawn subtask
+            </div>
+          </div>
+          <div class="tree-arrow">↓</div>
+          <div class="tree-row">
+            <div class="tree-box leaf">
+              child answer A
+            </div>
+            <div class="tree-box leaf">
+              child answer B
+            </div>
+            <div class="tree-box leaf">
+              fallback leaf
+            </div>
+          </div>
         </div>
-        <div class="code">completion(prompt)
-  -> _run(prompt, depth=0)
-      -> CodeAgent(REPL + rlm_call)
-          -> rlm_call(sub_prompt)
-              -> _run(sub_prompt, depth + 1)
-              -> or _plain_completion(sub_prompt)
-      -> aggregate child results
-  -> return response + call_tree + llm_requests</div>
+        <div class="card">
+          <div class="annotation-list">
+            <div class="annotation"><strong>1.</strong> The root call creates the first node in the tree.</div>
+            <div class="annotation"><strong>2.</strong> The agent decides whether to answer now or delegate subproblems.</div>
+            <div class="annotation"><strong>3.</strong> Each subproblem becomes a child node with its own prompt.</div>
+            <div class="annotation"><strong>4.</strong> The parent aggregates all child responses into the final answer.</div>
+          </div>
+        </div>
       </div>
       <footer class="footer">
-        <span>Use the notebook trace cells to make this concrete.</span>
+        <span>The same pattern can be understood without the notebook: build agent, recurse, aggregate, trace.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Walkthrough</div>
+        <h2>A concrete example flow</h2>
+      </header>
+      <div class="content">
+        <div class="timeline">
+          <div class="timeline-step">
+            <strong>Root</strong>
+            Read three full articles.
+          </div>
+          <div class="timeline-step">
+            <strong>Child 1-3</strong>
+            Produce one summary per article.
+          </div>
+          <div class="timeline-step">
+            <strong>Parent</strong>
+            Compare and merge the three summaries.
+          </div>
+          <div class="timeline-step">
+            <strong>Output</strong>
+            Return one short meta-summary.
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>This is the simplest way to explain recursion to a general audience.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -514,24 +1081,25 @@ count_result = count_agent.completion(count_prompt)</div>
         <div class="eyebrow">Observability</div>
         <h2>Prompt tracing makes the agent explainable</h2>
       </header>
-      <div class="content">
-        <div class="card">
-          <p>With <strong>capture_prompt_traces=True</strong>, you can inspect the exact messages sent to the LLM server at each step.</p>
-          <ul>
-            <li>Root agent prompt</li>
-            <li>Child prompts from <strong>rlm_call</strong></li>
-            <li>Plain fallback payloads at max depth</li>
-          </ul>
-        </div>
-        <div class="code">trace_result = trace_agent.completion(trace_prompt)
+      <div class="terminal-board">
+        <div class="terminal-card">depth=0 phase=agent_step
+[system] You are an RLM agent...
+[user] Break this task into subproblems...
 
-for request in trace_result.iter_llm_requests():
-    print(request["depth"], request["phase"])
-    for message in request["messages"]:
-        print(message["role"], message.get("content", ""))</div>
+depth=1 phase=agent_step
+[system] You are an RLM agent...
+[user] Summarise article A...
+
+depth=2 phase=plain_completion
+[user] Summarise this chunk...</div>
+        <div class="annotation-list">
+          <div class="annotation"><strong>Root prompt</strong><br>Shows the instruction scaffold given to the top-level agent.</div>
+          <div class="annotation"><strong>Child prompt</strong><br>Shows how recursive subcalls get narrower, local tasks.</div>
+          <div class="annotation"><strong>Leaf fallback</strong><br>Shows what happens when the recursion depth limit is reached.</div>
+        </div>
       </div>
       <footer class="footer">
-        <span>This is useful for demos, debugging, and explaining the mechanism live.</span>
+        <span>This is useful for demos, debugging, teaching, and making the system behavior auditable.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -544,22 +1112,22 @@ for request in trace_result.iter_llm_requests():
       <div class="content">
         <div class="card">
           <ol>
-            <li>Show the letter-counting question</li>
-            <li>Run the counting demo in the notebook</li>
-            <li>Reveal the prompt trace for that demo</li>
-            <li>Explain the jump from tool use to recursion</li>
-            <li>Run Needle-in-a-Haystack</li>
-            <li>Run hierarchical summarisation</li>
-            <li>End with prompt tracing and saved metadata</li>
+            <li>Open with the letter-counting question</li>
+            <li>Explain why Python execution improves reliability</li>
+            <li>Define RLM as recursive task decomposition</li>
+            <li>Show the internal mechanism slide</li>
+            <li>Show the summarisation walkthrough</li>
+            <li>Optionally switch to the notebook for live examples</li>
+            <li>Finish with prompt tracing and saved metadata</li>
           </ol>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
-          <p>The audience sees a concrete reliability win first. Once they accept that the model can use external execution, recursive self-decomposition feels like a natural next step instead of a theoretical abstraction.</p>
+          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebook then becomes supporting evidence, not a dependency for understanding.</p>
         </div>
       </div>
       <footer class="footer">
-        <span>Slides establish the mental model. The notebook provides the live evidence.</span>
+        <span>The deck now stands on its own. The notebook is optional for live proof.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
