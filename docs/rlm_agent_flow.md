@@ -7,24 +7,24 @@ tree of LLM calls, and where prompt tracing is captured.
 
 ```mermaid
 flowchart TD
-    A[User calls completion(prompt)] --> B[Create root _CallNode depth 0]
-    B --> C[_run(prompt, depth=0, node=root)]
-    C --> D[_build_agent(depth, node)]
-    D --> E[Create CodeAgent with rlm_call tool]
-    E --> F[CodeAgent sends step prompt to OpenAI-compatible server]
-    F --> G{Model answers directly?}
-    G -->|Yes| H[Return final answer for this node]
-    G -->|No, uses rlm_call| I[Create child _CallNode depth+1]
-    I --> J{depth >= max_depth?}
-    J -->|No| K[_run(sub_prompt, depth+1, child_node)]
-    J -->|Yes| L[_plain_completion(sub_prompt, child_node)]
-    K --> M[Child response returned to parent Python REPL]
+    A["User calls completion(prompt)"] --> B["Create root _CallNode at depth 0"]
+    B --> C["Run _run(prompt, depth=0, node=root)"]
+    C --> D["Build CodeAgent for this node"]
+    D --> E["Expose rlm_call as a tool"]
+    E --> F["Send agent step prompt to the OpenAI-compatible server"]
+    F --> G{"Answer directly?"}
+    G -->|Yes| H["Return node-level answer"]
+    G -->|No, call rlm_call| I["Create child _CallNode at depth + 1"]
+    I --> J{"Reached max_depth?"}
+    J -->|No| K["Run child _run(sub_prompt, depth+1, child_node)"]
+    J -->|Yes| L["Use _plain_completion(sub_prompt, child_node)"]
+    K --> M["Return child response to the parent REPL"]
     L --> M
-    M --> N[Parent agent aggregates child results]
+    M --> N["Parent aggregates child results"]
     N --> H
-    H --> O[completion() returns RLMCompletion]
-    O --> P[metadata.call_tree contains recursive structure]
-    O --> Q[metadata.call_tree.llm_requests contains prompt traces]
+    H --> O["Return RLMCompletion"]
+    O --> P["metadata.call_tree stores the recursive structure"]
+    O --> Q["metadata.call_tree.llm_requests stores traced prompts"]
 ```
 
 ## Prompt trace capture points
