@@ -13,15 +13,27 @@ A standard LLM call is:
     response = llm.completion(prompt)
 
 An RLM call replaces that with:
-    response = rlm.completion(prompt)
+    response = rlm.completion(task, context)
 
-Inside an RLM completion, the model runs inside a Python REPL.  It may freely
-decompose its input, write helper code, and recursively call itself via:
-    result = rlm_call(sub_prompt)
+Key architectural principle (from the paper)
+--------------------------------------------
+The context (the potentially very long input) is **never** embedded as a string
+literal inside the prompt.  Instead it lives as a Python variable ``rlm_context``
+inside the REPL execution environment.  The model interacts with it
+programmatically:
 
-smolagents provides exactly this capability through its CodeAgent, which:
-  - Runs LLM-generated Python code in a sandboxed environment.
-  - Makes tools available to the generated code (we expose `rlm_call` as one).
+    # correct — the model writes this in the REPL
+    mid    = len(rlm_context) // 2
+    left   = rlm_call("summarise first half", rlm_context[:mid])
+    right  = rlm_call("summarise second half", rlm_context[mid:])
+    final_answer(left + " " + right)
+
+    # wrong — embeds full context in a prompt string (what we deliberately avoid)
+    result = rlm_call(f"Summarise: {rlm_context}")
+
+smolagents provides the REPL via its CodeAgent.  ``rlm_context`` is injected
+into the executor's state before the agent runs so it is available as a Python
+variable without appearing in the LLM-visible prompt text.
 
 Usage
 -----
@@ -33,7 +45,12 @@ Usage
         max_depth=3,
         verbose=True,
     )
-    result = agent.completion("Summarise the following 10 000-word article: ...")
+    # task  — short description of what to do
+    # context — the raw input data; stored as `rlm_context` in the Python REPL
+    result = agent.completion(
+        task="Summarise the article",
+        context=very_long_article_text,
+    )
     print(result.response)
     print(result.metadata)   # recursive call tree
 """
@@ -160,8 +177,9 @@ class _LLMRequestTrace:
 @dataclass
 class _CallNode:
     """A node in the recursive call tree (used for metadata / logging)."""
-    prompt: str
+    task: str           # short task description (never contains raw context)
     depth: int
+    context_size: int = 0   # byte-length of the context slice at this level
     start_time: float = field(default_factory=time.time)
     end_time: float | None = None
     response: str = ""
@@ -170,8 +188,9 @@ class _CallNode:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "prompt_preview": self.prompt[:120] + ("…" if len(self.prompt) > 120 else ""),
+            "task_preview": self.task[:120] + ("…" if len(self.task) > 120 else ""),
             "depth": self.depth,
+            "context_size": self.context_size,
             "duration_s": round((self.end_time or time.time()) - self.start_time, 3),
             "response_preview": self.response[:120] + ("…" if len(self.response) > 120 else ""),
             "llm_requests": [request.to_dict() for request in self.llm_requests],
@@ -364,19 +383,29 @@ class RLMAgent:
     # Public API
     # ------------------------------------------------------------------
 
-    def completion(self, prompt: str, capture_prompt_traces: bool | None = None) -> RLMCompletion:
+    def completion(self, task: str, context: str | None = None, capture_prompt_traces: bool | None = None) -> RLMCompletion:
         """
         Run an RLM completion.
 
         This is the drop-in replacement for a plain ``llm.completion(prompt)``
         call.  Internally the model runs inside a smolagents CodeAgent REPL
-        where it can call ``rlm_call(sub_prompt)`` to decompose the task
-        recursively.
+        where it can call ``rlm_call(sub_task, context_slice)`` to decompose
+        the task recursively.
+
+        The key difference from a naive LLM call is that ``context`` is never
+        embedded as a string in the prompt.  It is instead stored as the Python
+        variable ``rlm_context`` inside the REPL execution environment, allowing
+        the model to interact with it programmatically (slicing, searching, etc.)
+        and pass portions to child calls without blowing up the prompt length.
 
         Parameters
         ----------
-        prompt:
-            The task or question to complete.
+        task:
+            Short description of what to do (no raw context content here).
+        context:
+            The raw input data (long text, document, list, etc.).  Stored as
+            ``rlm_context`` inside the Python REPL — never embedded in the
+            prompt string.  Pass ``None`` for tasks that need no separate data.
         capture_prompt_traces:
             Override the constructor-level prompt trace setting for this call.
 
@@ -392,9 +421,13 @@ class RLMAgent:
             else capture_prompt_traces
         )
 
-        self._root_node = _CallNode(prompt=prompt, depth=0)
+        self._root_node = _CallNode(
+            task=task,
+            depth=0,
+            context_size=len(context) if context else 0,
+        )
         try:
-            response = self._run(prompt, depth=0, node=self._root_node)
+            response = self._run(task, context=context, depth=0, node=self._root_node)
             self._root_node.response = response
             self._root_node.end_time = time.time()
 
@@ -468,32 +501,44 @@ class RLMAgent:
         rlm_self = self  # capture for closure
 
         @tool
-        def rlm_call(sub_prompt: str) -> str:
+        def rlm_call(sub_task: str, context_slice: str = "") -> str:
             """
-            Recursively call the RLM on a sub-prompt.
+            Recursively call the RLM on a sub-task with an optional context slice.
 
-            Use this tool to decompose a complex or long task into smaller
-            pieces and get an answer for each piece.  The answers can then be
-            combined in your code to produce the final result.
+            IMPORTANT: extract the relevant portion of `rlm_context` in your
+            Python code first, then pass the result as `context_slice`.
+            Never embed raw context content inside `sub_task`.
+
+            Correct usage:
+                mid = len(rlm_context) // 2
+                left  = rlm_call("Summarise this half", rlm_context[:mid])
+                right = rlm_call("Summarise this half", rlm_context[mid:])
+
+            Wrong (defeats the purpose of RLM, never do this):
+                result = rlm_call(f"Summarise: {rlm_context}")
 
             Args:
-                sub_prompt: The sub-task or question to hand off to a child RLM.
+                sub_task: Short description of what to do (no raw content).
+                context_slice: Python-extracted portion of rlm_context to process.
 
             Returns:
-                The response string from the child RLM call.
+                The response string from the child RLM.
             """
+            child_context: str | None = context_slice or None
+            ctx_size = len(child_context) if child_context else 0
+
             if depth >= rlm_self.max_depth:
-                # Base case: plain LLM call without further recursion
-                child_node = _CallNode(prompt=sub_prompt, depth=depth + 1)
+                # Base case: plain LLM completion — context is small enough now
+                child_node = _CallNode(task=sub_task, depth=depth + 1, context_size=ctx_size)
                 parent_node.children.append(child_node)
-                result = rlm_self._plain_completion(sub_prompt, node=child_node)
+                result = rlm_self._plain_completion(sub_task, context=child_context, node=child_node)
                 child_node.response = result
                 child_node.end_time = time.time()
                 return result
 
-            child_node = _CallNode(prompt=sub_prompt, depth=depth + 1)
+            child_node = _CallNode(task=sub_task, depth=depth + 1, context_size=ctx_size)
             parent_node.children.append(child_node)
-            result = rlm_self._run(sub_prompt, depth=depth + 1, node=child_node)
+            result = rlm_self._run(sub_task, context=child_context, depth=depth + 1, node=child_node)
             child_node.response = result
             child_node.end_time = time.time()
             return result
@@ -507,30 +552,62 @@ class RLMAgent:
         )
         return agent
 
-    def _run(self, prompt: str, depth: int, node: _CallNode) -> str:
-        """Run one agent step and return the final answer."""
+    def _run(self, task: str, context: str | None, depth: int, node: _CallNode) -> str:
+        """
+        Run one agent REPL step and return the final answer.
+
+        The context is injected into the agent's Python execution state as the
+        variable ``rlm_context`` — it is NOT embedded in the prompt text.
+        This is the fundamental difference from a plain LLM call and the core
+        mechanic of an RLM: the model manipulates the context programmatically.
+        """
         system_hint = textwrap.dedent(f"""\
             You are an RLM (Recursive Language Model) agent at recursion depth {depth}/{self.max_depth}.
 
-            You run inside a Python REPL.  For any task that is too long or complex to
-            handle in a single pass, you should:
-              1. Split the input into manageable chunks.
-              2. Call `rlm_call(sub_prompt)` for each chunk.
-              3. Aggregate the results in Python and produce the final answer.
+            You run inside a Python REPL.  The input context is available as the
+            Python variable `rlm_context` — do NOT embed its content as a string
+            literal in any sub-call.  Instead, use Python to slice and process it.
 
-            If the task is simple enough to answer directly, just do so.
+            For tasks that require handling large context:
+              1. Extract relevant portions: e.g. `chunk = rlm_context[:len(rlm_context)//2]`
+              2. Call `rlm_call(sub_task, chunk)` where `sub_task` is a SHORT
+                 description and `chunk` is the Python-extracted slice.
+              3. Aggregate child results in Python and call `final_answer(...)`.
+
+            Correct pattern:
+                mid   = len(rlm_context) // 2
+                left  = rlm_call("Summarise first half", rlm_context[:mid])
+                right = rlm_call("Summarise second half", rlm_context[mid:])
+                final_answer(left + " " + right)
+
+            WRONG — never embed the full context in a sub-call string:
+                rlm_call(f"Summarise: {{rlm_context}}")
+
+            If the task is simple enough to answer directly with code, just do so.
         """)
-        full_prompt = f"{system_hint}\n\nTask:\n{prompt}"
+        task_desc = f"{system_hint}\n\nTask:\n{task}"
         agent = self._build_agent(depth=depth, parent_node=node)
-        result = agent.run(full_prompt)
+
+        # Inject context as a Python variable WITHOUT embedding it in the prompt.
+        # agent.state is synced to the executor by agent.run() before the first step.
+        if context is not None:
+            agent.state["rlm_context"] = context
+
+        result = agent.run(task_desc)
         return str(result)
 
-    def _plain_completion(self, prompt: str, node: _CallNode | None = None) -> str:
-        """Fallback: a single non-recursive LLM completion (no agent loop)."""
+    def _plain_completion(self, task: str, context: str | None = None, node: _CallNode | None = None) -> str:
+        """
+        Fallback leaf-node completion: a single non-recursive LLM chat call.
+
+        At this point the context has already been decomposed into a small enough
+        slice that it fits comfortably in the model's context window.
+        """
         from openai import OpenAI
 
         client = OpenAI(base_url=self.base_url, api_key=self.api_key)
-        messages = [{"role": "user", "content": prompt}]
+        content = f"{task}\n\nContext:\n{context}" if context else task
+        messages: list[dict[str, Any]] = [{"role": "user", "content": content}]
         if node is not None:
             self._record_llm_request(
                 node=node,

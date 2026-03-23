@@ -24,28 +24,45 @@ response = llm.completion(prompt)   # context window is a hard limit
 RLM call:
 
 ```python
-response = rlm.completion(prompt)   # the model can split and call itself
+response = rlm.completion(task, context)   # context stays in the Python env
 ```
 
-Inside an RLM completion the model runs in a Python REPL.  It may decompose its
-input, write helper code, and call `rlm_call(sub_prompt)` to launch child LM
-instances.  This allows handling tasks that exceed the context window via
-divide-and-conquer.
+### Key design principle: context lives in the REPL, not the prompt
 
-The implementation here uses **smolagents' `CodeAgent`** as the REPL environment
-and an **OpenAI-compatible API** (llama.cpp) for inference.
+The critical insight from the paper is **where the context lives**.
+
+| Approach | Where is the context? |
+|---|---|
+| Naive | Embedded as a string inside the prompt (hits the context-window limit) |
+| **RLM** | Stored as `rlm_context` Python variable inside the REPL environment |
+
+Because the context is a Python variable, the model can inspect and slice it
+programmatically and pass those slices to child calls — without re-embedding the
+full content in each prompt string.
+
+```python
+# The model writes this inside the REPL:
+mid   = len(rlm_context) // 2
+left  = rlm_call("Summarise first half",  rlm_context[:mid])
+right = rlm_call("Summarise second half", rlm_context[mid:])
+final_answer(left + " " + right)
+
+# Never do this — it re-embeds the context and defeats the purpose:
+# rlm_call(f"Summarise: {rlm_context}")
+```
 
 ```
- RLMAgent.completion(prompt)
+ RLMAgent.completion(task, context)
        │
-  CodeAgent REPL
-       │   writes Python code, may call …
-       └── rlm_call(sub_prompt_1) ──► child RLMAgent (depth+1)
-       └── rlm_call(sub_prompt_2) ──► child RLMAgent (depth+1)
-       │                                     │
-       │                              … until max_depth
-       │                              (falls back to plain LLM)
-       └── aggregates results ──► final answer
+       ├── rlm_context = context  ← injected into REPL state (not the prompt)
+       │
+  CodeAgent REPL  ←── model sees: task description + rlm_context variable
+       │
+       ├── rlm_call("sub-task", rlm_context[:mid]) ──► child RLMAgent (depth+1)
+       └── rlm_call("sub-task", rlm_context[mid:]) ──► child RLMAgent (depth+1)
+                                                              │
+                                                     … until max_depth
+                                                     (plain LLM call with small slice)
 ```
 
 ---
@@ -145,9 +162,24 @@ agent = RLMAgent(
     verbose=True,
 )
 
-result = agent.completion("Summarise the following 10 000-word article: ...")
+# task    — short description of what to do (no raw context content)
+# context — the long input data; stored as `rlm_context` Python variable
+#           in the REPL, NOT embedded in the prompt string
+result = agent.completion(
+    task="Summarise the article",
+    context=very_long_article_text,
+)
 print(result.response)
 print(result.metadata)   # recursive call tree (JSON-serialisable)
+```
+
+Inside the REPL the model writes code like:
+
+```python
+mid   = len(rlm_context) // 2
+left  = rlm_call("Summarise first half",  rlm_context[:mid])
+right = rlm_call("Summarise second half", rlm_context[mid:])
+final_answer(left + " " + right)
 ```
 
 ### Inspecting the prompts sent to the LLM server
