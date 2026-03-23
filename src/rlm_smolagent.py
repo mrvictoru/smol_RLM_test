@@ -20,15 +20,38 @@ Key architectural principle (from the paper)
 The context (the potentially very long input) is **never** embedded as a string
 literal inside the prompt.  Instead it lives as a Python variable ``rlm_context``
 inside the REPL execution environment.  The model interacts with it
-programmatically:
+programmatically — slicing, searching, splitting — and decides how to decompose
+the task itself.
 
-    # correct — the model writes this in the REPL
-    mid    = len(rlm_context) // 2
-    left   = rlm_call("summarise first half", rlm_context[:mid])
-    right  = rlm_call("summarise second half", rlm_context[mid:])
+Two LLM sub-call tools are available inside the REPL (mirroring the official
+paper's ``llm_query`` / ``rlm_query`` distinction):
+
+    ``llm_call(sub_task, context_slice)``
+        Direct, non-recursive LLM call.  Fast and lightweight — use for
+        leaf-level queries on chunks that are already small enough to answer
+        directly (mirrors ``llm_query`` in the reference implementation).
+
+    ``rlm_call(sub_task, context_slice)``
+        Recursive RLM sub-call.  The child agent gets its own REPL and can
+        decompose the slice further (mirrors ``rlm_query``).  Falls back to a
+        plain completion when ``max_depth`` is reached.
+
+The model orchestrates freely in Python — it chooses HOW to split, what
+strategy to use, and which tool to call:
+
+    # summarise paragraph-by-paragraph with direct LLM calls
+    paragraphs = [p for p in rlm_context.split("\\n\\n") if p.strip()]
+    summaries = [llm_call(f"Summarise paragraph {i+1}", p)
+                 for i, p in enumerate(paragraphs)]
+    final_answer("\\n".join(summaries))
+
+    # recursive binary split for very large contexts
+    mid   = len(rlm_context) // 2
+    left  = rlm_call("Analyse first half",  rlm_context[:mid])
+    right = rlm_call("Analyse second half", rlm_context[mid:])
     final_answer(left + " " + right)
 
-    # wrong — embeds full context in a prompt string (what we deliberately avoid)
+    # WRONG — embeds full context in a prompt string (always avoid this)
     result = rlm_call(f"Summarise: {rlm_context}")
 
 smolagents provides the REPL via its CodeAgent.  ``rlm_context`` is injected
@@ -389,8 +412,15 @@ class RLMAgent:
 
         This is the drop-in replacement for a plain ``llm.completion(prompt)``
         call.  Internally the model runs inside a smolagents CodeAgent REPL
-        where it can call ``rlm_call(sub_task, context_slice)`` to decompose
-        the task recursively.
+        where it can freely orchestrate how to process ``rlm_context``:
+
+        * ``llm_call(sub_task, context_slice)`` — direct, non-recursive LLM call.
+          Use for leaf-level queries on chunks that are already small enough to
+          answer in one shot (mirrors ``llm_query`` in the reference paper).
+
+        * ``rlm_call(sub_task, context_slice)`` — recursive RLM sub-call.  The
+          child agent gets its own REPL and can decompose the slice further
+          (mirrors ``rlm_query`` in the reference paper).
 
         The key difference from a naive LLM call is that ``context`` is never
         embedded as a string in the prompt.  It is instead stored as the Python
@@ -495,24 +525,74 @@ class RLMAgent:
 
     def _build_agent(self, depth: int, parent_node: _CallNode) -> CodeAgent:
         """
-        Build a CodeAgent equipped with an ``rlm_call`` tool that performs
-        recursive sub-calls up to ``max_depth``.
+        Build a CodeAgent equipped with two LLM sub-call tools:
+
+        ``llm_call`` — direct, non-recursive LLM call (mirrors ``llm_query``
+        in the reference implementation).  Use for leaf-level queries on chunks
+        that are already small enough to answer in one shot.
+
+        ``rlm_call`` — recursive RLM sub-call (mirrors ``rlm_query``).  The
+        child agent gets its own REPL and can decompose the slice further.
+        Falls back to a plain completion when ``max_depth`` is reached.
         """
         rlm_self = self  # capture for closure
+
+        @tool
+        def llm_call(sub_task: str, context_slice: str = "") -> str:
+            """
+            Make a direct (non-recursive) LLM call on a sub-task.
+
+            Use this for leaf-level queries on chunks that are small enough to
+            answer in a single LLM call without further decomposition.
+
+            IMPORTANT: extract the relevant portion of `rlm_context` in your
+            Python code first, then pass the result as `context_slice`.
+            Never embed raw context content inside `sub_task`.
+
+            Example:
+                paragraphs = [p for p in rlm_context.split("\\n\\n") if p.strip()]
+                summaries = [llm_call(f"Summarise paragraph {i+1}", p)
+                             for i, p in enumerate(paragraphs)]
+                final_answer("\\n".join(summaries))
+
+            Wrong (defeats the purpose of RLM, never do this):
+                result = llm_call(f"Summarise: {rlm_context}")
+
+            Args:
+                sub_task: Short description of what to do (no raw content).
+                context_slice: Python-extracted portion of rlm_context to process.
+
+            Returns:
+                The response string from the LLM.
+            """
+            child_context: str | None = context_slice or None
+            ctx_size = len(child_context) if child_context else 0
+
+            child_node = _CallNode(task=sub_task, depth=depth + 1, context_size=ctx_size)
+            parent_node.children.append(child_node)
+            result = rlm_self._plain_completion(sub_task, context=child_context, node=child_node)
+            child_node.response = result
+            child_node.end_time = time.time()
+            return result
 
         @tool
         def rlm_call(sub_task: str, context_slice: str = "") -> str:
             """
             Recursively call the RLM on a sub-task with an optional context slice.
 
+            The child agent gets its own Python REPL and can further decompose
+            the slice using `llm_call` or `rlm_call`.  Use this for complex
+            sub-tasks that themselves may require recursive processing.
+
             IMPORTANT: extract the relevant portion of `rlm_context` in your
             Python code first, then pass the result as `context_slice`.
             Never embed raw context content inside `sub_task`.
 
-            Correct usage:
-                mid = len(rlm_context) // 2
-                left  = rlm_call("Summarise this half", rlm_context[:mid])
-                right = rlm_call("Summarise this half", rlm_context[mid:])
+            Example — recursive binary split for very large contexts:
+                mid   = len(rlm_context) // 2
+                left  = rlm_call("Analyse first half",  rlm_context[:mid])
+                right = rlm_call("Analyse second half", rlm_context[mid:])
+                final_answer(left + " " + right)
 
             Wrong (defeats the purpose of RLM, never do this):
                 result = rlm_call(f"Summarise: {rlm_context}")
@@ -527,25 +607,22 @@ class RLMAgent:
             child_context: str | None = context_slice or None
             ctx_size = len(child_context) if child_context else 0
 
-            if depth >= rlm_self.max_depth:
-                # Base case: plain LLM completion — context is small enough now
-                child_node = _CallNode(task=sub_task, depth=depth + 1, context_size=ctx_size)
-                parent_node.children.append(child_node)
-                result = rlm_self._plain_completion(sub_task, context=child_context, node=child_node)
-                child_node.response = result
-                child_node.end_time = time.time()
-                return result
-
             child_node = _CallNode(task=sub_task, depth=depth + 1, context_size=ctx_size)
             parent_node.children.append(child_node)
-            result = rlm_self._run(sub_task, context=child_context, depth=depth + 1, node=child_node)
+
+            if depth >= rlm_self.max_depth:
+                # Base case: plain LLM completion — context is small enough now
+                result = rlm_self._plain_completion(sub_task, context=child_context, node=child_node)
+            else:
+                result = rlm_self._run(sub_task, context=child_context, depth=depth + 1, node=child_node)
+
             child_node.response = result
             child_node.end_time = time.time()
             return result
 
         model = self._build_model(node=parent_node, phase="agent_step")
         agent = CodeAgent(
-            tools=[rlm_call],
+            tools=[llm_call, rlm_call],
             model=model,
             max_steps=self.max_steps,
             verbosity_level=1 if self.verbose else 0,
@@ -565,25 +642,41 @@ class RLMAgent:
             You are an RLM (Recursive Language Model) agent at recursion depth {depth}/{self.max_depth}.
 
             You run inside a Python REPL.  The input context is available as the
-            Python variable `rlm_context` — do NOT embed its content as a string
-            literal in any sub-call.  Instead, use Python to slice and process it.
+            Python variable `rlm_context` — treat it as a Python object.  Slice it,
+            search it, split it, transform it.  Do NOT embed its raw content as a
+            string literal inside any sub-call argument.
 
-            For tasks that require handling large context:
-              1. Extract relevant portions: e.g. `chunk = rlm_context[:len(rlm_context)//2]`
-              2. Call `rlm_call(sub_task, chunk)` where `sub_task` is a SHORT
-                 description and `chunk` is the Python-extracted slice.
-              3. Aggregate child results in Python and call `final_answer(...)`.
+            Two tools are available for making LLM sub-calls:
 
-            Correct pattern:
+            `llm_call(sub_task, context_slice)`:
+                Direct, non-recursive LLM call.  Fast and lightweight.
+                Use for leaf-level queries on chunks that are small enough to
+                answer in a single LLM call without further decomposition.
+
+            `rlm_call(sub_task, context_slice)`:
+                Recursive RLM sub-call.  The child agent gets its own Python REPL
+                and can decompose the slice further.  Use for complex sub-tasks
+                that may themselves need recursive processing.
+
+            You decide HOW to orchestrate — use any Python logic to split, filter,
+            or transform `rlm_context` before passing slices to sub-calls.
+
+            Example — summarise paragraph-by-paragraph with direct LLM calls:
+                paragraphs = [p for p in rlm_context.split("\\n\\n") if p.strip()]
+                summaries = [llm_call(f"Summarise paragraph {{i+1}}", p)
+                             for i, p in enumerate(paragraphs)]
+                final_answer("\\n".join(summaries))
+
+            Example — recursive binary split for very large contexts:
                 mid   = len(rlm_context) // 2
-                left  = rlm_call("Summarise first half", rlm_context[:mid])
-                right = rlm_call("Summarise second half", rlm_context[mid:])
+                left  = rlm_call("Analyse first half",  rlm_context[:mid])
+                right = rlm_call("Analyse second half", rlm_context[mid:])
                 final_answer(left + " " + right)
 
             WRONG — never embed the full context in a sub-call string:
                 rlm_call(f"Summarise: {{rlm_context}}")
 
-            If the task is simple enough to answer directly with code, just do so.
+            If the task is simple enough to answer directly without sub-calls, just do so.
         """)
         task_desc = f"{system_hint}\n\nTask:\n{task}"
         agent = self._build_agent(depth=depth, parent_node=node)

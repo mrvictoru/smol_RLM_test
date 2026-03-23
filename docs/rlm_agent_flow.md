@@ -7,25 +7,62 @@ tree of LLM calls, and where prompt tracing is captured.
 
 ```mermaid
 flowchart TD
-    A["User calls completion(prompt)"] --> B["Create root _CallNode at depth 0"]
-    B --> C["Run _run(prompt, depth=0, node=root)"]
+    A["User calls completion(task, context)"] --> B["Create root _CallNode at depth 0"]
+    B --> C["Run _run(task, context, depth=0, node=root)"]
     C --> D["Build CodeAgent for this node"]
-    D --> E["Expose rlm_call as a tool"]
-    E --> F["Send agent step prompt to the OpenAI-compatible server"]
-    F --> G{"Answer directly?"}
-    G -->|Yes| H["Return node-level answer"]
-    G -->|No, call rlm_call| I["Create child _CallNode at depth + 1"]
-    I --> J{"Reached max_depth?"}
-    J -->|No| K["Run child _run(sub_prompt, depth+1, child_node)"]
-    J -->|Yes| L["Use _plain_completion(sub_prompt, child_node)"]
-    K --> M["Return child response to the parent REPL"]
-    L --> M
-    M --> N["Parent aggregates child results"]
-    N --> H
-    H --> O["Return RLMCompletion"]
-    O --> P["metadata.call_tree stores the recursive structure"]
-    O --> Q["metadata.call_tree.llm_requests stores traced prompts"]
+    D --> E["Expose llm_call and rlm_call as tools"]
+    E --> F["Inject context as rlm_context Python variable (NOT in prompt)"]
+    F --> G["Send agent step prompt to the OpenAI-compatible server"]
+    G --> H{"Model decision"}
+    H -->|"Answer directly"| I["Return node-level answer"]
+    H -->|"Call llm_call(sub_task, slice)"| J["Create child _CallNode at depth + 1"]
+    H -->|"Call rlm_call(sub_task, slice)"| K["Create child _CallNode at depth + 1"]
+    J --> L["_plain_completion(sub_task, slice, child_node) — always direct"]
+    K --> M{"Reached max_depth?"}
+    M -->|No| N["Run child _run(sub_task, slice, depth+1, child_node)"]
+    M -->|Yes| O["_plain_completion(sub_task, slice, child_node) — fallback"]
+    L --> P["Return child response to the parent REPL"]
+    N --> P
+    O --> P
+    P --> Q["Parent aggregates child results in Python"]
+    Q --> I
+    I --> R["Return RLMCompletion"]
+    R --> S["metadata.call_tree stores the recursive structure"]
+    R --> T["metadata.call_tree.llm_requests stores traced prompts"]
 ```
+
+## Two tools — `llm_call` vs `rlm_call`
+
+The REPL exposes two tools that mirror the official paper's `llm_query` /
+`rlm_query` distinction:
+
+| Tool | Behaviour | When to use |
+|------|-----------|-------------|
+| `llm_call(sub_task, context_slice)` | Direct, non-recursive LLM call.  Fast and lightweight. | Leaf-level queries on chunks small enough to answer in one shot. |
+| `rlm_call(sub_task, context_slice)` | Recursive RLM sub-call.  Child gets its own REPL. | Complex sub-tasks that may themselves need further decomposition. |
+
+The model **decides freely** how to orchestrate — it can split by paragraphs,
+by regex patterns, by sentence boundaries, or by any other Python logic:
+
+```python
+# Example 1 — paragraph-by-paragraph with direct LLM calls
+paragraphs = [p for p in rlm_context.split("\n\n") if p.strip()]
+summaries = [llm_call(f"Summarise paragraph {i+1}", p)
+             for i, p in enumerate(paragraphs)]
+final_answer("\n".join(summaries))
+
+# Example 2 — recursive binary split for very large contexts
+mid   = len(rlm_context) // 2
+left  = rlm_call("Analyse first half",  rlm_context[:mid])
+right = rlm_call("Analyse second half", rlm_context[mid:])
+final_answer(left + " " + right)
+
+# WRONG — never embed the full context in a sub-call string
+rlm_call(f"Summarise: {rlm_context}")
+```
+
+The context (`rlm_context`) is injected into the REPL as a Python variable
+**before** the first agent step.  It never appears in the prompt text.
 
 ## Prompt trace capture points
 
@@ -33,9 +70,9 @@ There are two places where prompts leave the application and are sent to the
 LLM server:
 
 1. Agent steps via `CodeAgent`
-2. Depth-limit fallback via `_plain_completion`
+2. Direct / fallback completions via `_plain_completion`
 
-The implementation now records both.
+The implementation records both.
 
 ### 1. Agent step tracing
 
@@ -58,19 +95,20 @@ as smolagents actually submitted it.
 
 ### 2. Plain completion tracing
 
-When recursion reaches `max_depth`, `rlm_call()` switches to
-`_plain_completion(sub_prompt, node=child_node)`.
+Both `llm_call` and the `rlm_call` depth-limit fallback go through
+`_plain_completion(sub_task, context, node=child_node)`.
 
 Before sending the request through the OpenAI SDK, the method records a
 `plain_completion` trace entry on that child node. This gives full visibility
-into the terminal leaf calls too.
+into all leaf calls.
 
 ## Data model
 
 Each `_CallNode` now stores:
 
-- `prompt`: original task for that node
+- `task`: original task for that node
 - `depth`: recursion depth
+- `context_size`: byte-length of the context slice at this level
 - `response`: node-level final answer
 - `children`: recursive subcalls
 - `llm_requests`: every outbound request generated while solving that node
@@ -121,7 +159,7 @@ print(result.format_prompt_trace())
 
 When you read the trace output, keep this distinction in mind:
 
-- `_CallNode.prompt` is the logical task given to that recursive node
+- `_CallNode.task` is the logical task given to that recursive node
 - `llm_requests[*].messages` is the actual payload sent to the LLM server
 
 Those are related, but not identical. The second view is the one you want when
