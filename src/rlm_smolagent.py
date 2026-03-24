@@ -406,7 +406,13 @@ class RLMAgent:
     # Public API
     # ------------------------------------------------------------------
 
-    def completion(self, task: str, context: str | None = None, capture_prompt_traces: bool | None = None) -> RLMCompletion:
+    def completion(
+        self,
+        task: str | None = None,
+        context: str | None = None,
+        capture_prompt_traces: bool | None = None,
+        **kwargs,
+    ) -> RLMCompletion:
         """
         Run an RLM completion.
 
@@ -444,6 +450,14 @@ class RLMAgent:
         RLMCompletion
             Object containing the final *response* and *metadata* (call tree).
         """
+        if task is None:
+            task = kwargs.pop("prompt", None)
+        if task is None:
+            raise TypeError("RLMAgent.completion() missing required argument: 'task'")
+        if kwargs:
+            unexpected = ", ".join(sorted(kwargs))
+            raise TypeError(f"RLMAgent.completion() got unexpected keyword argument(s): {unexpected}")
+
         previous_capture_setting = self._active_capture_prompt_traces
         self._active_capture_prompt_traces = (
             self.capture_prompt_traces
