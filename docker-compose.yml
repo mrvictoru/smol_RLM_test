@@ -1,0 +1,24 @@
+services:
+  rlm-jupyter:
+    build: .
+    container_name: rlm_smolagent_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      # Persist notebooks and allow live editing from the host
+      - ./notebooks:/workspace/notebooks
+      # Persist logs produced during experiments
+      - ./logs:/workspace/logs
+    environment:
+      # URL of the llama.cpp server running on the host.
+      # host-gateway resolves to the host machine inside the container.
+      - LLAMA_BASE_URL=http://host.docker.internal:1337
+      # Model name as expected by the llama.cpp server (can be overridden).
+      - LLAMA_MODEL=Qwen3.5-35B-A3B-UD-IQ4_NL.gguf
+      # Optional: OpenAI-compatible API key (llama.cpp accepts any non-empty string).
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-not-needed}
+    extra_hosts:
+      # Makes 'host-gateway' resolve to the Docker host IP so the container
+      # can reach the llama.cpp server running on the host.
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
