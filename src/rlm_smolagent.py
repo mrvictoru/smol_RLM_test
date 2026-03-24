@@ -167,6 +167,51 @@ class RLMCompletion:
 
         return "\n\n".join(blocks)
 
+    # ------------------------------------------------------------------
+    # Visualizer convenience methods
+    # ------------------------------------------------------------------
+
+    def save_html(self, path: str) -> "Path":
+        """
+        Generate a self-contained HTML visualizer for this trace.
+
+        The resulting file can be opened directly in any browser — no
+        server or extra dependencies required.
+
+        Parameters
+        ----------
+        path:
+            Destination file path (e.g. ``"trace.html"``).
+
+        Returns
+        -------
+        pathlib.Path
+            Resolved path of the generated file.
+        """
+        from rlm_visualizer import save_html as _save_html
+        return _save_html(self, path)
+
+    def save_json(self, path: str) -> "Path":
+        """
+        Persist the full completion payload (response + metadata) as JSON.
+
+        The JSON file can later be reloaded with
+        ``rlm_visualizer.load_json()`` and fed back into ``save_html()``
+        to regenerate the visualizer without re-running the agent.
+
+        Parameters
+        ----------
+        path:
+            Destination file path (e.g. ``"trace.json"``).
+
+        Returns
+        -------
+        pathlib.Path
+            Resolved path of the generated file.
+        """
+        from rlm_visualizer import save_json as _save_json
+        return _save_json(self, path)
+
 
 @dataclass
 class _LLMRequestTrace:
