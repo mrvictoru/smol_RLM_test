@@ -915,7 +915,7 @@ count_result = count_agent.completion(count_prompt)</div>
           </div>
           <div class="timeline-step">
             <strong>3. Split</strong>
-            RLM lets it issue smaller prompts with <span class="accent">rlm_call</span>.
+            RLM lets it issue smaller prompts with <span class="accent">llm_call</span> (direct) or <span class="accent">rlm_call</span> (recursive).
           </div>
           <div class="timeline-step">
             <strong>4. Merge</strong>
@@ -995,6 +995,44 @@ count_result = count_agent.completion(count_prompt)</div>
 
     <section class="slide">
       <header>
+        <div class="eyebrow">Two tools</div>
+        <h2>llm_call vs. rlm_call</h2>
+      </header>
+      <div class="content single">
+        <table class="comparison">
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Behaviour</th>
+              <th>Use when</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>llm_call(sub_task, context_slice)</code></td>
+              <td>Direct, non-recursive LLM call — no child REPL spawned</td>
+              <td>Chunk is already small enough to answer in one shot</td>
+            </tr>
+            <tr>
+              <td><code>rlm_call(sub_task, context_slice)</code></td>
+              <td>Recursive sub-agent — child gets its own REPL and tools</td>
+              <td>Sub-task may itself need further decomposition</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top:1.5rem;">
+          <p>The model decides freely in Python how to orchestrate — it can split by paragraphs, by regex, by length, or any other logic before choosing which tool to call.</p>
+          <p>Mirrors the paper's <strong>llm_query</strong> / <strong>rlm_query</strong> distinction.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>llm_call = fast leaf call. rlm_call = recursive sub-agent. The model orchestrates freely.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
         <div class="eyebrow">Mechanism</div>
         <h2>How RLMAgent works internally</h2>
       </header>
@@ -1013,8 +1051,12 @@ count_result = count_agent.completion(count_prompt)</div>
               build CodeAgent
             </div>
             <div class="tree-box child">
+              <strong>llm_call(...)</strong><br>
+              direct leaf call
+            </div>
+            <div class="tree-box child">
               <strong>rlm_call(...)</strong><br>
-              spawn subtask
+              spawn sub-agent
             </div>
           </div>
           <div class="tree-arrow">↓</div>
@@ -1033,8 +1075,8 @@ count_result = count_agent.completion(count_prompt)</div>
         <div class="card">
           <div class="annotation-list">
             <div class="annotation"><strong>1.</strong> The root call creates the first node in the tree.</div>
-            <div class="annotation"><strong>2.</strong> The agent decides whether to answer now or delegate subproblems.</div>
-            <div class="annotation"><strong>3.</strong> Each subproblem becomes a child node with its own prompt.</div>
+            <div class="annotation"><strong>2.</strong> The agent decides whether to answer directly or delegate subproblems.</div>
+            <div class="annotation"><strong>3.</strong> <strong>llm_call</strong>: direct answer for small chunks. <strong>rlm_call</strong>: new child agent with its own REPL.</div>
             <div class="annotation"><strong>4.</strong> The parent aggregates all child responses into the final answer.</div>
           </div>
         </div>
@@ -1115,6 +1157,7 @@ depth=2 phase=plain_completion
             <li>Open with the letter-counting question</li>
             <li>Explain why Python execution improves reliability</li>
             <li>Define RLM as recursive task decomposition</li>
+            <li>Show the two-tool slide (llm_call vs. rlm_call)</li>
             <li>Show the internal mechanism slide</li>
             <li>Show the summarisation walkthrough</li>
             <li>Optionally switch to the notebook for live examples</li>
@@ -1140,7 +1183,7 @@ depth=2 phase=plain_completion
       <div class="content single">
         <div class="card">
           <p class="lead" style="max-width:none; color:var(--ink);">A Recursive Language Model is an inference pattern where the model can write code, break a task into subproblems, call itself on those subproblems, and then combine the results into a final answer.</p>
-          <p class="quote">Plain LLM: one shot. CodeAgent: one shot plus tools. RLM: tools plus self-decomposition.</p>
+          <p class="quote">Plain LLM: one shot. CodeAgent: one shot plus tools. RLM: tools plus self-decomposition via llm_call (direct) and rlm_call (recursive).</p>
         </div>
       </div>
       <footer class="footer">
