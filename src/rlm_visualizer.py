@@ -625,13 +625,17 @@ function esc(s) {
 
 // Format message content: escape HTML, then render code blocks and newlines
 function formatContent(raw) {
-  // First, HTML-escape the entire string for safety
+  // First, HTML-escape the entire string for safety.
+  // After this call every captured group from the regexes below
+  // contains already-escaped text, so re-insertion is XSS-safe.
   let s = esc(raw);
   // Render fenced code blocks: ```lang\n...\n``` → <pre><code>...</code></pre>
+  // Note: `code` is captured from the already-escaped `s`, so it is safe.
   s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
     return '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin:6px 0;overflow-x:auto;"><code>' + code + '</code></pre>';
   });
   // Render inline code: `...` → <code>...</code>
+  // Note: $1 references text from the already-escaped `s`, so it is safe.
   s = s.replace(/`([^`\n]+)`/g, '<code style="background:var(--bg);padding:1px 4px;border-radius:3px;font-size:0.95em;">$1</code>');
   // Render newlines as <br> (but not inside <pre> blocks — handled by pre's white-space)
   // Split on <pre>...</pre>, only convert \n to <br> in non-pre sections
