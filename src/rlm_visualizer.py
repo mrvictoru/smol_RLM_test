@@ -451,9 +451,8 @@ body {
   padding: 10px;
   font-size: 12px;
   font-family: var(--font-mono);
-  white-space: pre-wrap;
   word-break: break-word;
-  max-height: 300px;
+  max-height: 500px;
   overflow-y: auto;
   line-height: 1.6;
   background: var(--code-bg);
@@ -624,6 +623,26 @@ function esc(s) {
   return div.innerHTML;
 }
 
+// Format message content: escape HTML, then render code blocks and newlines
+function formatContent(raw) {
+  // First, HTML-escape the entire string for safety
+  let s = esc(raw);
+  // Render fenced code blocks: ```lang\n...\n``` → <pre><code>...</code></pre>
+  s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+    return '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin:6px 0;overflow-x:auto;"><code>' + code + '</code></pre>';
+  });
+  // Render inline code: `...` → <code>...</code>
+  s = s.replace(/`([^`\n]+)`/g, '<code style="background:var(--bg);padding:1px 4px;border-radius:3px;font-size:0.95em;">$1</code>');
+  // Render newlines as <br> (but not inside <pre> blocks — handled by pre's white-space)
+  // Split on <pre>...</pre>, only convert \n to <br> in non-pre sections
+  const parts = s.split(/(<pre[\s\S]*?<\/pre>)/g);
+  s = parts.map(function(part) {
+    if (part.startsWith('<pre')) return part;
+    return part.replace(/\n/g, '<br>');
+  }).join('');
+  return s;
+}
+
 function renderTree() {
   document.getElementById("tree-content").innerHTML = renderTreeNode(callTree, "0");
 }
@@ -702,7 +721,7 @@ function renderDetail(path) {
   let h = "";
 
   // Task section
-  h += renderDetailSection("Task", `<div class="detail-text-block">${esc(node.task_preview || "")}</div>`, true);
+  h += renderDetailSection("Task", `<div class="detail-text-block">${esc(node.task || node.task_preview || "")}</div>`, true);
 
   // Metadata fields
   h += '<div class="detail-section">';
@@ -714,7 +733,7 @@ function renderDetail(path) {
   h += '</div>';
 
   // Response section
-  h += renderDetailSection("Response", `<div class="detail-text-block">${esc(node.response_preview || "")}</div>`, true);
+  h += renderDetailSection("Response", `<div class="detail-text-block">${esc(node.response || node.response_preview || "")}</div>`, true);
 
   // LLM requests
   const requests = node.llm_requests || [];
@@ -778,18 +797,24 @@ function renderLLMRequest(req, index) {
 function renderMessage(msg) {
   const role = (msg.role || "unknown").toLowerCase();
   let displayRole = role;
-  const content = msg.content || "";
+  let content = msg.content || "";
 
   // Handle tool calls and tool responses from smolagents
   if (role === "assistant" && msg.tool_calls) {
     displayRole = "tool-call";
+    // Show tool call details if content is empty
+    if (!content && msg.tool_calls) {
+      content = JSON.stringify(msg.tool_calls, null, 2);
+    }
   } else if (role === "tool") {
     displayRole = "tool-response";
   }
 
+  const raw = typeof content === "string" ? content : JSON.stringify(content, null, 2);
+
   let h = `<div class="message-bubble">`;
   h += `<div class="message-role ${esc(displayRole)}">${esc(displayRole)}</div>`;
-  h += `<div class="message-content">${esc(typeof content === "string" ? content : JSON.stringify(content, null, 2))}</div>`;
+  h += `<div class="message-content">${formatContent(raw)}</div>`;
   h += `</div>`;
   return h;
 }

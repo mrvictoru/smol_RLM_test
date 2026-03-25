@@ -257,10 +257,12 @@ class _CallNode:
     def to_dict(self) -> dict[str, Any]:
         return {
             "task_preview": self.task[:120] + ("…" if len(self.task) > 120 else ""),
+            "task": self.task,
             "depth": self.depth,
             "context_size": self.context_size,
             "duration_s": round((self.end_time or time.time()) - self.start_time, 3),
             "response_preview": self.response[:120] + ("…" if len(self.response) > 120 else ""),
+            "response": self.response,
             "llm_requests": [request.to_dict() for request in self.llm_requests],
             "children": [c.to_dict() for c in self.children],
         }
