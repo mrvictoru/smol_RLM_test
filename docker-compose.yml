@@ -5,6 +5,8 @@ services:
     ports:
       - "8888:8888"
     volumes:
+      # Persist source code so imports work and live code edits are picked up
+      - ./src:/workspace/src
       # Persist notebooks and allow live editing from the host
       - ./notebooks:/workspace/notebooks
       # Persist logs produced during experiments
