@@ -458,6 +458,74 @@ body {
   background: var(--code-bg);
 }
 
+/* ---- Agent Steps ---- */
+.agent-step {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.agent-step-header {
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.agent-step-header:hover { background: var(--bg-card-hover); }
+.step-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  background: var(--cyan);
+  color: #fff;
+}
+.step-badge.final { background: var(--green); }
+.step-badge.error { background: var(--red); }
+.agent-step-body { padding: 8px; }
+.agent-step-block-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 8px 0 4px 0;
+}
+.agent-step-block-label:first-child { margin-top: 0; }
+.agent-step-code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.agent-step-observation {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  color: var(--cyan);
+}
+
 /* ---- Theme toggle ---- */
 .theme-btn {
   background: var(--bg);
@@ -733,11 +801,22 @@ function renderDetail(path) {
   h += `<div class="detail-field"><span class="label">Duration</span><span class="value">${(node.duration_s || 0).toFixed(3)}s</span></div>`;
   h += `<div class="detail-field"><span class="label">Context Size</span><span class="value">${formatBytes(node.context_size || 0)}</span></div>`;
   h += `<div class="detail-field"><span class="label">Children</span><span class="value">${(node.children || []).length}</span></div>`;
+  h += `<div class="detail-field"><span class="label">Agent Steps</span><span class="value">${(node.agent_steps || []).length}</span></div>`;
   h += `<div class="detail-field"><span class="label">LLM Requests</span><span class="value">${(node.llm_requests || []).length}</span></div>`;
   h += '</div>';
 
   // Response section
   h += renderDetailSection("Response", `<div class="detail-text-block">${esc(node.response || node.response_preview || "")}</div>`, true);
+
+  // Agent steps
+  const agentSteps = node.agent_steps || [];
+  if (agentSteps.length > 0) {
+    let stepsHtml = "";
+    agentSteps.forEach((step, i) => {
+      stepsHtml += renderAgentStep(step, i);
+    });
+    h += renderDetailSection(`Agent Steps (${agentSteps.length})`, stepsHtml, true);
+  }
 
   // LLM requests
   const requests = node.llm_requests || [];
@@ -746,7 +825,7 @@ function renderDetail(path) {
     requests.forEach((req, i) => {
       reqHtml += renderLLMRequest(req, i);
     });
-    h += renderDetailSection(`LLM Requests (${requests.length})`, reqHtml, true);
+    h += renderDetailSection(`LLM Requests (${requests.length})`, reqHtml, false);
   }
 
   panel.innerHTML = h;
@@ -793,6 +872,58 @@ function renderLLMRequest(req, index) {
   messages.forEach(msg => {
     h += renderMessage(msg);
   });
+
+  h += `</div></div>`;
+  return h;
+}
+
+function renderAgentStep(step, index) {
+  const stepNum = step.step_number != null ? step.step_number : index + 1;
+  const isFinal = step.is_final_answer || false;
+  const hasError = !!step.error;
+  const id = "agent-step-" + index;
+  const badgeCls = hasError ? "error" : (isFinal ? "final" : "");
+  const label = hasError ? "error" : (isFinal ? "final answer" : "code step");
+
+  let h = `<div class="agent-step">`;
+  h += `<div class="agent-step-header" onclick="toggleSection('${id}')">`;
+  h += `<span class="chevron" id="${id}-chev">▼</span>`;
+  h += `<span class="step-badge ${badgeCls}">step ${stepNum}</span>`;
+  h += `<span>${esc(label)}</span>`;
+  h += `</div>`;
+  h += `<div class="agent-step-body" id="${id}-body">`;
+
+  // Model output (the LLM's reasoning / plan text)
+  if (step.model_output) {
+    h += `<div class="agent-step-block-label">Model Output</div>`;
+    h += `<div class="agent-step-code">${formatContent(step.model_output)}</div>`;
+  }
+
+  // Code action
+  if (step.code_action) {
+    h += `<div class="agent-step-block-label">Code</div>`;
+    h += `<div class="agent-step-code">${esc(step.code_action)}</div>`;
+  }
+
+  // Tool calls
+  if (step.tool_calls && step.tool_calls.length > 0) {
+    h += `<div class="agent-step-block-label">Tool Calls</div>`;
+    step.tool_calls.forEach(tc => {
+      h += `<div class="agent-step-code">${esc(tc.name || "unknown")}(${esc(JSON.stringify(tc.arguments || {}))})</div>`;
+    });
+  }
+
+  // Observations (print output from code execution)
+  if (step.observations) {
+    h += `<div class="agent-step-block-label">Observation</div>`;
+    h += `<div class="agent-step-observation">${esc(step.observations)}</div>`;
+  }
+
+  // Error
+  if (step.error) {
+    h += `<div class="agent-step-block-label">Error</div>`;
+    h += `<div class="agent-step-observation" style="color:var(--red)">${esc(step.error)}</div>`;
+  }
 
   h += `</div></div>`;
   return h;

@@ -252,6 +252,7 @@ class _CallNode:
     end_time: float | None = None
     response: str = ""
     llm_requests: list[_LLMRequestTrace] = field(default_factory=list)
+    agent_steps: list[dict[str, Any]] = field(default_factory=list)
     children: list["_CallNode"] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -264,6 +265,7 @@ class _CallNode:
             "response_preview": self.response[:120] + ("…" if len(self.response) > 120 else ""),
             "response": self.response,
             "llm_requests": [request.to_dict() for request in self.llm_requests],
+            "agent_steps": self.agent_steps,
             "children": [c.to_dict() for c in self.children],
         }
 
@@ -435,7 +437,7 @@ class RLMAgent:
         max_depth: int = 3,
         max_steps: int = 10,
         verbose: bool = False,
-        capture_prompt_traces: bool = False,
+        capture_prompt_traces: bool = True,
     ) -> None:
         self.base_url = base_url
         self.model_name = model_name
@@ -748,7 +750,35 @@ class RLMAgent:
             agent.state["rlm_context"] = context
 
         result = agent.run(task_desc)
+
+        # Capture agent steps (code actions, observations) from the CodeAgent memory.
+        self._capture_agent_steps(agent, node)
+
         return str(result)
+
+    @staticmethod
+    def _capture_agent_steps(agent: CodeAgent, node: _CallNode) -> None:
+        """Extract intermediate step data from the CodeAgent memory into the node."""
+        from smolagents.memory import ActionStep
+
+        for step in agent.memory.steps:
+            if not isinstance(step, ActionStep):
+                continue
+            step_data: dict[str, Any] = {
+                "step_number": step.step_number,
+                "model_output": step.model_output if isinstance(step.model_output, str) else None,
+                "code_action": step.code_action,
+                "observations": step.observations,
+                "is_final_answer": step.is_final_answer,
+            }
+            if step.tool_calls:
+                step_data["tool_calls"] = [
+                    {"name": tc.name, "arguments": tc.arguments, "id": tc.id}
+                    for tc in step.tool_calls
+                ]
+            if step.error:
+                step_data["error"] = str(step.error)
+            node.agent_steps.append(step_data)
 
     def _plain_completion(self, task: str, context: str | None = None, node: _CallNode | None = None) -> str:
         """
