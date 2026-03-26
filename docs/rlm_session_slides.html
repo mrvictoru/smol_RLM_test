@@ -1095,25 +1095,25 @@ count_result = count_agent.completion(count_prompt)</div>
       <div class="content">
         <div class="timeline">
           <div class="timeline-step">
-            <strong>Root</strong>
-            Read three full articles.
+            <strong>Root agent</strong>
+            Splits the corporate report into 6 sections using Python.
           </div>
           <div class="timeline-step">
-            <strong>Child 1-3</strong>
-            Produce one summary per article.
+            <strong>Child 1–6</strong>
+            Each calls llm_call() to summarise or comprehend its section.
           </div>
           <div class="timeline-step">
-            <strong>Parent</strong>
-            Compare and merge the three summaries.
+            <strong>Root aggregation</strong>
+            Collects section summaries/answers, combines into final output.
           </div>
           <div class="timeline-step">
             <strong>Output</strong>
-            Return one short meta-summary.
+            Returns a structured executive summary or answered questions.
           </div>
         </div>
       </div>
       <footer class="footer">
-        <span>This is the simplest way to explain recursion to a general audience.</span>
+        <span>This mirrors the RLM paper's core demonstration: recursive decomposition for tasks that exceed single-shot LLM capacity.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1176,7 +1176,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
         </div>
       </div>
       <footer class="footer">
-        <span>Generated HTML files are in logs/. See Notebook 02 § 2-F or Notebook 03 § Step 6.</span>
+        <span>Generated HTML files are in logs/. See Notebook 02 § 2-F or Notebook 03 § Step 5.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1184,26 +1184,25 @@ save_html(data, "trace_reloaded.html")</code></pre>
     <section class="slide">
       <header>
         <div class="eyebrow">Showcase</div>
-        <h2>Long-context multi-question retrieval</h2>
+        <h2>Recursive summarization &amp; comprehension Q&amp;A</h2>
       </header>
       <div class="content">
         <div class="card">
-          <p>Notebook 03 demonstrates RLM's core strength: <strong>retrieving information buried inside long documents</strong>.</p>
+          <p>Notebook 03 demonstrates what makes RLM <strong>fundamentally different</strong> from a plain LLM call — the agent <em>must</em> decompose and delegate.</p>
           <table>
             <thead>
-              <tr><th>Setup</th><th>Detail</th></tr>
+              <tr><th>Experiment</th><th>Why sub-agents are required</th></tr>
             </thead>
             <tbody>
-              <tr><td>Document</td><td>~6,000-word synthetic corporate report (120+ paragraphs)</td></tr>
-              <tr><td>Hidden facts</td><td>5 labelled facts planted at random positions</td></tr>
-              <tr><td>Task</td><td>Find <em>all five</em> facts in a single RLM call</td></tr>
-              <tr><td>Verification</td><td>Automatic accuracy check against ground truth</td></tr>
+              <tr><td><strong>A — Hierarchical Summarization</strong></td><td>Summarization is an LLM task — you cannot summarize with regex. The agent splits the report into sections and calls <code>llm_call</code> on each.</td></tr>
+              <tr><td><strong>B — Natural-Language Q&amp;A</strong></td><td>Facts are embedded in natural prose (numbers as words, no labels). Sub-agents must <em>read and comprehend</em> each section.</td></tr>
             </tbody>
           </table>
+          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Document: ~6,000-word multi-section corporate report with 6 sections, ~90 paragraphs, 5 comprehension questions.</p>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this is hard for a plain LLM</h2>
-          <p>A single-shot LLM must fit the entire 6,000-word document in its context window and locate scattered facts in one pass. The RLM instead stores the document as a Python variable, programmatically splits it, searches each chunk recursively, and aggregates results — turning a retrieval problem into a search algorithm.</p>
+          <p>A single-shot LLM must process the entire document at once. The RLM splits by section, delegates comprehension to sub-agents, and aggregates results — turning a reading-comprehension problem into a <strong>recursive search algorithm</strong>. Regex shortcuts are impossible because facts are written as natural prose.</p>
         </div>
       </div>
       <footer class="footer">
@@ -1227,14 +1226,14 @@ save_html(data, "trace_reloaded.html")</code></pre>
             <li>Show the internal mechanism slide</li>
             <li>Show the summarisation walkthrough</li>
             <li>Demonstrate the interactive HTML trace viewer</li>
-            <li>Run the long-context retrieval showcase (Notebook 03)</li>
+            <li>Run the recursive-power showcase: summarization + Q&amp;A (Notebook 03)</li>
             <li>Optionally switch to the notebook for live examples</li>
             <li>Finish with prompt tracing and saved metadata</li>
           </ol>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
-          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebooks then become supporting evidence, not a dependency for understanding. The long-context demo is the climactic proof that RLM works on tasks that exceed simple LLM capabilities.</p>
+          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebooks then become supporting evidence, not a dependency for understanding. The summarization + Q&amp;A demo is the climactic proof that RLM works on tasks requiring genuine LLM comprehension — not just pattern matching.</p>
         </div>
       </div>
       <footer class="footer">

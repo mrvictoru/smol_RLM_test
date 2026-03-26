@@ -116,7 +116,7 @@ Navigate to **http://localhost:8888** in your browser.
 |---|---|
 | `01_rlm_basics.ipynb` | Core concepts, architecture, simple examples |
 | `02_rlm_experiments.ipynb` | Session-ready demo flow: letter counting, prompt tracing, Needle-in-a-Haystack, hierarchical summarisation |
-| `03_rlm_long_context_qa.ipynb` | **Showcase**: long-context multi-question retrieval — synthetic corporate report with five hidden facts, full call-tree inspection, accuracy verification, and interactive HTML visualization |
+| `03_rlm_long_context_qa.ipynb` | **Showcase**: hierarchical summarization + natural-language comprehension Q&A over a multi-section corporate report — demonstrates recursive sub-agent decomposition, call-tree inspection, accuracy verification, and interactive HTML visualization |
 
 ### 5. Open the presentation slides
 
@@ -128,7 +128,7 @@ Suggested flow for a live session:
 1. Start with the HTML slides to explain the motivation.
 2. Move to `02_rlm_experiments.ipynb` for the letter-counting demo.
 3. Continue in the notebook for the recursive examples and prompt tracing.
-4. Run `03_rlm_long_context_qa.ipynb` for the long-context retrieval showcase.
+4. Run `03_rlm_long_context_qa.ipynb` for the recursive-power showcase (summarization + Q&A).
 5. Open the generated HTML trace files in `logs/` to explore interactively.
 
 ---
