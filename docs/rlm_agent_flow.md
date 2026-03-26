@@ -112,6 +112,7 @@ Each `_CallNode` now stores:
 - `response`: node-level final answer
 - `children`: recursive subcalls
 - `llm_requests`: every outbound request generated while solving that node
+- `agent_steps`: intermediate code actions, observations, and errors from the CodeAgent REPL
 
 Each `llm_requests` entry includes:
 
@@ -124,6 +125,16 @@ Each `llm_requests` entry includes:
 - `response_format`
 - `tool_names`
 - `request_payload`
+
+Each `agent_steps` entry includes:
+
+- `step_number`
+- `model_output` (the LLM's reasoning text)
+- `code_action` (the Python code the agent generated)
+- `observations` (REPL output / printed text)
+- `is_final_answer`
+- `tool_calls` (if any tool was invoked)
+- `error` (if the step raised an exception)
 
 ## How to inspect traces after a run
 
@@ -165,3 +176,53 @@ When you read the trace output, keep this distinction in mind:
 Those are related, but not identical. The second view is the one you want when
 you need to debug exact prompt construction or inspect what each subagent step
 actually saw.
+
+## Agent step capture
+
+After each `agent.run()` call, the RLMAgent extracts intermediate step data
+from the CodeAgent's memory and stores it in `_CallNode.agent_steps`.  This
+captures the Python code the model wrote at each step, the REPL output
+(observations), any errors, and whether the step was the final answer.
+
+This data is available both in the JSON metadata and the HTML visualizer.
+
+```python
+# Inspect agent steps programmatically
+for step in result.metadata["call_tree"].get("agent_steps", []):
+    print(f"Step {step['step_number']}:")
+    if step.get("code_action"):
+        print(f"  Code: {step['code_action'][:200]}")
+    if step.get("observations"):
+        print(f"  Output: {step['observations'][:200]}")
+```
+
+## Interactive HTML visualizer
+
+The `rlm_visualizer` module generates a self-contained HTML file from any
+`RLMCompletion` or previously saved JSON trace.  The HTML requires no server —
+open it directly in any browser.
+
+```python
+from rlm_visualizer import save_html, save_json, load_json
+
+# From a live result
+save_html(result, "trace.html")
+
+# Or use convenience methods
+result.save_html("trace.html")
+result.save_json("trace.json")
+
+# Reload from JSON later
+data = load_json("trace.json")
+save_html(data, "trace_reloaded.html")
+```
+
+The visualizer shows:
+
+- **Left panel**: interactive call tree with expand/collapse
+- **Right panel**: selected node details
+  - Task and response text
+  - Agent steps (code, observations, errors)
+  - LLM request payloads (full message lists)
+  - Timing, depth, and context-size metadata
+- **Stats bar**: total nodes, depth, duration, LLM requests

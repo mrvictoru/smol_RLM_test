@@ -1148,6 +1148,72 @@ depth=2 phase=plain_completion
 
     <section class="slide">
       <header>
+        <div class="eyebrow">Visualization</div>
+        <h2>Interactive HTML trace viewer</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <p>Every RLM run can be saved as a <strong>self-contained HTML file</strong> with:</p>
+          <ul>
+            <li><strong>Call tree</strong> — interactive expand/collapse view of the recursive structure</li>
+            <li><strong>Agent steps</strong> — the Python code the model wrote and its REPL observations</li>
+            <li><strong>LLM requests</strong> — full message payloads sent to the inference server</li>
+            <li><strong>Metadata</strong> — timing, depth, context size for every node</li>
+          </ul>
+          <pre style="background:var(--accent-3); padding:0.8rem; border-radius:0.5rem; font-size:0.95rem; overflow-x:auto;"><code>from rlm_visualizer import save_html, save_json, load_json
+
+result = agent.completion(task="...", context="...")
+save_html(result, "trace.html")    # open in any browser
+save_json(result, "trace.json")    # archive for later
+
+# Reload and re-visualize without re-running
+data = load_json("trace.json")
+save_html(data, "trace_reloaded.html")</code></pre>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why it matters</h2>
+          <p>The visualizer turns opaque agent behaviour into an <strong>auditable, shareable artifact</strong>. You can compare runs side by side, debug prompt issues, and share traces with teammates — all in a single HTML file with no server.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Generated HTML files are in logs/. See Notebook 02 § 2-F or Notebook 03 § Step 6.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Showcase</div>
+        <h2>Long-context multi-question retrieval</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <p>Notebook 03 demonstrates RLM's core strength: <strong>retrieving information buried inside long documents</strong>.</p>
+          <table>
+            <thead>
+              <tr><th>Setup</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Document</td><td>~6,000-word synthetic corporate report (120+ paragraphs)</td></tr>
+              <tr><td>Hidden facts</td><td>5 labelled facts planted at random positions</td></tr>
+              <tr><td>Task</td><td>Find <em>all five</em> facts in a single RLM call</td></tr>
+              <tr><td>Verification</td><td>Automatic accuracy check against ground truth</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this is hard for a plain LLM</h2>
+          <p>A single-shot LLM must fit the entire 6,000-word document in its context window and locate scattered facts in one pass. The RLM instead stores the document as a Python variable, programmatically splits it, searches each chunk recursively, and aggregates results — turning a retrieval problem into a search algorithm.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Run notebooks/03_rlm_long_context_qa.ipynb for a live demo with full trace visualization.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
         <div class="eyebrow">Demo flow</div>
         <h2>Recommended session sequence</h2>
       </header>
@@ -1160,17 +1226,19 @@ depth=2 phase=plain_completion
             <li>Show the two-tool slide (llm_call vs. rlm_call)</li>
             <li>Show the internal mechanism slide</li>
             <li>Show the summarisation walkthrough</li>
+            <li>Demonstrate the interactive HTML trace viewer</li>
+            <li>Run the long-context retrieval showcase (Notebook 03)</li>
             <li>Optionally switch to the notebook for live examples</li>
             <li>Finish with prompt tracing and saved metadata</li>
           </ol>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
-          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebook then becomes supporting evidence, not a dependency for understanding.</p>
+          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebooks then become supporting evidence, not a dependency for understanding. The long-context demo is the climactic proof that RLM works on tasks that exceed simple LLM capabilities.</p>
         </div>
       </div>
       <footer class="footer">
-        <span>The deck now stands on its own. The notebook is optional for live proof.</span>
+        <span>The deck now stands on its own. The notebooks are optional for live proof.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>

@@ -116,6 +116,7 @@ Navigate to **http://localhost:8888** in your browser.
 |---|---|
 | `01_rlm_basics.ipynb` | Core concepts, architecture, simple examples |
 | `02_rlm_experiments.ipynb` | Session-ready demo flow: letter counting, prompt tracing, Needle-in-a-Haystack, hierarchical summarisation |
+| `03_rlm_long_context_qa.ipynb` | **Showcase**: long-context multi-question retrieval — synthetic corporate report with five hidden facts, full call-tree inspection, accuracy verification, and interactive HTML visualization |
 
 ### 5. Open the presentation slides
 
@@ -127,6 +128,8 @@ Suggested flow for a live session:
 1. Start with the HTML slides to explain the motivation.
 2. Move to `02_rlm_experiments.ipynb` for the letter-counting demo.
 3. Continue in the notebook for the recursive examples and prompt tracing.
+4. Run `03_rlm_long_context_qa.ipynb` for the long-context retrieval showcase.
+5. Open the generated HTML trace files in `logs/` to explore interactively.
 
 ---
 
@@ -141,10 +144,13 @@ Suggested flow for a live session:
 │   ├── rlm_agent_flow.md   # internal flow and prompt-tracing notes
 │   └── rlm_session_slides.html
 ├── src/
-│   └── rlm_smolagent.py    # RLMAgent — core implementation
+│   ├── rlm_smolagent.py    # RLMAgent — core implementation
+│   └── rlm_visualizer.py   # self-contained HTML trace visualizer
+├── logs/                    # generated HTML/JSON trace files
 └── notebooks/
     ├── 01_rlm_basics.ipynb
-    └── 02_rlm_experiments.ipynb
+    ├── 02_rlm_experiments.ipynb
+    └── 03_rlm_long_context_qa.ipynb
 ```
 
 ---
@@ -212,6 +218,35 @@ Each node in `result.metadata["call_tree"]` now includes an `llm_requests`
 array. For agent-driven nodes this captures each step that smolagents sends to
 the OpenAI-compatible server; for depth-limit fallback nodes it captures the
 single plain completion request.
+
+### Interactive HTML visualizer
+
+Every RLM run can be saved as a self-contained HTML file that provides an
+interactive tree view of the recursive call structure, agent code steps, and
+full LLM request payloads:
+
+```python
+from rlm_visualizer import save_html, save_json, load_json
+
+# Save an interactive HTML visualization (open in any browser)
+save_html(result, "trace.html")
+
+# Or use the convenience methods on RLMCompletion directly
+result.save_html("trace.html")
+result.save_json("trace.json")
+
+# Reload a saved JSON trace and re-visualize without re-running the agent
+data = load_json("trace.json")
+save_html(data, "trace_reloaded.html")
+```
+
+Each node in the visualization shows:
+- **Task** and **response** summaries
+- **Agent steps** — the Python code the model wrote and its observations
+- **LLM requests** — the exact message payloads sent to the server
+- **Timing** and **context size** metadata
+
+See `logs/` for pre-generated examples.
 
 For a deeper walk-through of the internal flow, see
 [docs/rlm_agent_flow.md](docs/rlm_agent_flow.md).
