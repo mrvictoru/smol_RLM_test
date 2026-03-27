@@ -202,8 +202,16 @@ body {
   background: var(--bg-card);
   flex-shrink: 0;
 }
-.answer-bar .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
-.answer-bar .value { font-size: 14px; color: var(--green); font-weight: 500; }
+.answer-bar .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.answer-bar .value { font-size: 14px; color: var(--green); font-weight: 500; white-space: pre-wrap; word-break: break-word; }
+.answer-bar .value.collapsed { max-height: 3.6em; overflow: hidden; position: relative; }
+.answer-bar .value.collapsed::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1.8em; background: linear-gradient(transparent, var(--bg-card)); pointer-events: none; }
+.answer-toggle {
+  font-size: 11px; color: var(--primary-light); cursor: pointer; border: none;
+  background: none; padding: 2px 8px; border-radius: 4px; font-family: var(--font-sans);
+  white-space: nowrap;
+}
+.answer-toggle:hover { background: var(--bg-card-hover); text-decoration: underline; }
 
 .main-panels {
   flex: 1;
@@ -590,7 +598,7 @@ kbd {
   <div class="stats-bar" id="stats-bar"></div>
 
   <div class="answer-bar" id="answer-bar">
-    <div class="label">Final Answer</div>
+    <div class="label">Final Answer <button class="answer-toggle" id="answer-toggle" style="display:none" onclick="toggleAnswer()">▸ Show full</button></div>
     <div class="value" id="final-answer"></div>
   </div>
 
@@ -997,9 +1005,29 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
+// ---- Answer bar expand / collapse ----
+let answerExpanded = false;
+function toggleAnswer() {
+  answerExpanded = !answerExpanded;
+  const el = document.getElementById("final-answer");
+  const btn = document.getElementById("answer-toggle");
+  el.classList.toggle("collapsed", !answerExpanded);
+  btn.textContent = answerExpanded ? "▾ Show less" : "▸ Show full";
+}
+
 // ---- Init ----
 renderStats();
-document.getElementById("final-answer").textContent = response || "(no final answer)";
+(function initAnswer() {
+  const el = document.getElementById("final-answer");
+  const btn = document.getElementById("answer-toggle");
+  const text = response || "(no final answer)";
+  el.textContent = text;
+  // If the answer is long (> 300 chars) start collapsed with a toggle
+  if (response && response.length > 300) {
+    el.classList.add("collapsed");
+    btn.style.display = "inline-block";
+  }
+})();
 document.getElementById("gen-time").textContent = "__GENERATED_AT__";
 renderTree();
 
