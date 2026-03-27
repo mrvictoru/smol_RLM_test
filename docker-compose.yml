@@ -19,6 +19,8 @@ services:
       - LLAMA_MODEL=Qwen3.5-35B-A3B-UD-IQ4_NL.gguf
       # Optional: OpenAI-compatible API key (llama.cpp accepts any non-empty string).
       - OPENAI_API_KEY=${OPENAI_API_KEY:-not-needed}
+      # Optional: Set the agent code execution timeout (in seconds).
+      - CODE_EXECUTION_TIMEOUT_SECONDS=300
     extra_hosts:
       # Makes 'host-gateway' resolve to the Docker host IP so the container
       # can reach the llama.cpp server running on the host.

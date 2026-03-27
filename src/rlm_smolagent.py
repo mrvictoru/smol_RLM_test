@@ -427,6 +427,9 @@ class RLMAgent:
     capture_prompt_traces:
         If *True*, every outbound request to the LLM server is attached to the
         call-tree metadata so prompts can be inspected after completion.
+    execution_timeout_seconds:
+        Maximum time allowed for each Python code execution step inside the
+        smolagents executor. Set to ``None`` to disable the timeout.
     """
 
     def __init__(
@@ -438,6 +441,7 @@ class RLMAgent:
         max_steps: int = 10,
         verbose: bool = False,
         capture_prompt_traces: bool = True,
+        execution_timeout_seconds: int | None = None,
     ) -> None:
         self.base_url = base_url
         self.model_name = model_name
@@ -446,6 +450,7 @@ class RLMAgent:
         self.max_steps = max_steps
         self.verbose = verbose
         self.capture_prompt_traces = capture_prompt_traces
+        self.execution_timeout_seconds = execution_timeout_seconds
         self._active_capture_prompt_traces = capture_prompt_traces
 
         # Shared call-tree root (rebuilt on every top-level completion call)
@@ -689,6 +694,7 @@ class RLMAgent:
             model=model,
             max_steps=self.max_steps,
             verbosity_level=1 if self.verbose else 0,
+            executor_kwargs={"timeout_seconds": self.execution_timeout_seconds},
         )
         return agent
 
