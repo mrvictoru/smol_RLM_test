@@ -203,7 +203,7 @@ body {
   flex-shrink: 0;
 }
 .answer-bar .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-.answer-bar .value { font-size: 14px; color: var(--green); font-weight: 500; white-space: pre-wrap; word-break: break-word; }
+.answer-bar .value { font-size: 14px; color: var(--green); font-weight: 500; white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto; }
 .answer-bar .value.collapsed { max-height: 3.6em; overflow: hidden; position: relative; }
 .answer-bar .value.collapsed::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1.8em; background: linear-gradient(transparent, var(--bg-card)); pointer-events: none; }
 .answer-toggle {
