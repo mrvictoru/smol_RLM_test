@@ -745,6 +745,13 @@ class RLMAgent:
             WRONG — never embed the full context in a sub-call string:
                 rlm_call(f"Summarise: {{rlm_context}}")
 
+            IMPORTANT — always validate your splits before processing:
+                After splitting `rlm_context` into chunks, print the number of
+                chunks and a short preview (first 80 chars) of each one.  If the
+                result looks wrong (too many fragments, empty chunks, or headers
+                mixed with content), adjust your splitting logic before making
+                any sub-calls.  A bad split will cascade into bad answers.
+
             If the task is simple enough to answer directly without sub-calls, just do so.
         """)
         task_desc = f"{system_hint}\n\nTask:\n{task}"

@@ -1198,7 +1198,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
               <tr><td><strong>B — Natural-Language Q&amp;A</strong></td><td>Facts are embedded in natural prose (numbers as words, no labels). Sub-agents must <em>read and comprehend</em> each section.</td></tr>
             </tbody>
           </table>
-          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Document: ~6,000-word multi-section corporate report with 6 sections, ~90 paragraphs, 5 comprehension questions.</p>
+          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Document: ~6,000-word multi-section corporate report with 6 sections, ~90 paragraphs, 5 comprehension questions. Uses block-format <code>SECTION:</code> separators for reliable splitting.</p>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this is hard for a plain LLM</h2>
@@ -1207,6 +1207,47 @@ save_html(data, "trace_reloaded.html")</code></pre>
       </div>
       <footer class="footer">
         <span>Run notebooks/03_rlm_long_context_qa.ipynb for a live demo with full trace visualization.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Lessons learned</div>
+        <h2>Document format &amp; split validation</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <h3 style="margin-top:0;">The problem</h3>
+          <p>An early version of Notebook 03 used <code>=== Name ===</code> section separators.
+          The agent wrote <code>split("===")</code> and got <strong>12 fragments</strong> (alternating headers and content)
+          instead of 6 sections &mdash; cascading into garbled sub-agent answers.</p>
+          <h3>Two-part fix (Option&nbsp;A&nbsp;+&nbsp;D)</h3>
+          <table>
+            <thead>
+              <tr><th>Fix</th><th>What changed</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A &mdash; Unambiguous separators</strong></td>
+                <td>Sections now use <code>SECTION: Name</code> between lines of <code>=</code> characters. Splitting on <code>SECTION:</code> is straightforward and reliable.</td>
+              </tr>
+              <tr>
+                <td><strong>D &mdash; Split-validation prompt</strong></td>
+                <td>The system prompt tells the agent: <em>&ldquo;After splitting, print the number of chunks and a short preview of each. If it looks wrong, fix it before making sub-calls.&rdquo;</em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Takeaway</h2>
+          <p>The agent already has all the tools it needs (Python REPL). The fix is
+          <strong>better input design</strong> (clear separators) plus <strong>defensive prompting</strong>
+          (validate before delegating). No extra parsing libraries required.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Good separator design + split validation = robust recursive decomposition.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1227,6 +1268,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
             <li>Show the summarisation walkthrough</li>
             <li>Demonstrate the interactive HTML trace viewer</li>
             <li>Run the recursive-power showcase: summarization + Q&amp;A (Notebook 03)</li>
+            <li>Discuss lessons learned: document format &amp; split validation</li>
             <li>Optionally switch to the notebook for live examples</li>
             <li>Finish with prompt tracing and saved metadata</li>
           </ol>

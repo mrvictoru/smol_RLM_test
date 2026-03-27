@@ -64,6 +64,25 @@ rlm_call(f"Summarise: {rlm_context}")
 The context (`rlm_context`) is injected into the REPL as a Python variable
 **before** the first agent step.  It never appears in the prompt text.
 
+## Split-validation guidance
+
+The system prompt includes an explicit instruction for the agent to **validate
+its split logic** before making sub-calls:
+
+> After splitting `rlm_context` into chunks, print the number of chunks and a
+> short preview (first 80 chars) of each one.  If the result looks wrong (too
+> many fragments, empty chunks, or headers mixed with content), adjust your
+> splitting logic before making any sub-calls.  A bad split will cascade into
+> bad answers.
+
+This was added after an early version of notebook 03 used ambiguous section
+separators (`=== Name ===`) which caused the agent's `split("===")` to produce
+12 alternating header/content fragments instead of the expected 6 sections.  The
+current document format uses unambiguous block headers
+(`SECTION: Name` between lines of `=` characters), and the validation hint
+ensures the agent catches any remaining splitting errors before they propagate
+through the recursion tree.
+
 ## Prompt trace capture points
 
 There are two places where prompts leave the application and are sent to the

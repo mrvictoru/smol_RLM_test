@@ -40,6 +40,11 @@ Because the context is a Python variable, the model can inspect and slice it
 programmatically and pass those slices to child calls — without re-embedding the
 full content in each prompt string.
 
+The system prompt also includes a **split-validation** hint: after splitting
+`rlm_context` the agent should print the number of chunks and a short preview
+of each, and fix the split if it looks wrong.  This prevents bad splits from
+cascading into garbled sub-agent answers.
+
 ```python
 # The model writes this inside the REPL:
 mid   = len(rlm_context) // 2
@@ -116,7 +121,7 @@ Navigate to **http://localhost:8888** in your browser.
 |---|---|
 | `01_rlm_basics.ipynb` | Core concepts, architecture, simple examples |
 | `02_rlm_experiments.ipynb` | Session-ready demo flow: letter counting, prompt tracing, Needle-in-a-Haystack, hierarchical summarisation |
-| `03_rlm_long_context_qa.ipynb` | **Showcase**: hierarchical summarization + natural-language comprehension Q&A over a multi-section corporate report — demonstrates recursive sub-agent decomposition, call-tree inspection, accuracy verification, and interactive HTML visualization |
+| `03_rlm_long_context_qa.ipynb` | **Showcase**: hierarchical summarization + natural-language comprehension Q&A over a multi-section corporate report — demonstrates recursive sub-agent decomposition, split validation, call-tree inspection, accuracy verification, and interactive HTML visualization |
 
 ### 5. Open the presentation slides
 
