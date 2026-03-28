@@ -167,6 +167,51 @@ class RLMCompletion:
 
         return "\n\n".join(blocks)
 
+    # ------------------------------------------------------------------
+    # Visualizer convenience methods
+    # ------------------------------------------------------------------
+
+    def save_html(self, path: str) -> "Path":
+        """
+        Generate a self-contained HTML visualizer for this trace.
+
+        The resulting file can be opened directly in any browser — no
+        server or extra dependencies required.
+
+        Parameters
+        ----------
+        path:
+            Destination file path (e.g. ``"trace.html"``).
+
+        Returns
+        -------
+        pathlib.Path
+            Resolved path of the generated file.
+        """
+        from rlm_visualizer import save_html as _save_html
+        return _save_html(self, path)
+
+    def save_json(self, path: str) -> "Path":
+        """
+        Persist the full completion payload (response + metadata) as JSON.
+
+        The JSON file can later be reloaded with
+        ``rlm_visualizer.load_json()`` and fed back into ``save_html()``
+        to regenerate the visualizer without re-running the agent.
+
+        Parameters
+        ----------
+        path:
+            Destination file path (e.g. ``"trace.json"``).
+
+        Returns
+        -------
+        pathlib.Path
+            Resolved path of the generated file.
+        """
+        from rlm_visualizer import save_json as _save_json
+        return _save_json(self, path)
+
 
 @dataclass
 class _LLMRequestTrace:
@@ -207,16 +252,20 @@ class _CallNode:
     end_time: float | None = None
     response: str = ""
     llm_requests: list[_LLMRequestTrace] = field(default_factory=list)
+    agent_steps: list[dict[str, Any]] = field(default_factory=list)
     children: list["_CallNode"] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "task_preview": self.task[:120] + ("…" if len(self.task) > 120 else ""),
+            "task": self.task,
             "depth": self.depth,
             "context_size": self.context_size,
             "duration_s": round((self.end_time or time.time()) - self.start_time, 3),
             "response_preview": self.response[:120] + ("…" if len(self.response) > 120 else ""),
+            "response": self.response,
             "llm_requests": [request.to_dict() for request in self.llm_requests],
+            "agent_steps": self.agent_steps,
             "children": [c.to_dict() for c in self.children],
         }
 
@@ -378,6 +427,9 @@ class RLMAgent:
     capture_prompt_traces:
         If *True*, every outbound request to the LLM server is attached to the
         call-tree metadata so prompts can be inspected after completion.
+    execution_timeout_seconds:
+        Maximum time allowed for each Python code execution step inside the
+        smolagents executor. Set to ``None`` to disable the timeout.
     """
 
     def __init__(
@@ -388,7 +440,8 @@ class RLMAgent:
         max_depth: int = 3,
         max_steps: int = 10,
         verbose: bool = False,
-        capture_prompt_traces: bool = False,
+        capture_prompt_traces: bool = True,
+        execution_timeout_seconds: int | None = None,
     ) -> None:
         self.base_url = base_url
         self.model_name = model_name
@@ -397,6 +450,7 @@ class RLMAgent:
         self.max_steps = max_steps
         self.verbose = verbose
         self.capture_prompt_traces = capture_prompt_traces
+        self.execution_timeout_seconds = execution_timeout_seconds
         self._active_capture_prompt_traces = capture_prompt_traces
 
         # Shared call-tree root (rebuilt on every top-level completion call)
@@ -640,6 +694,7 @@ class RLMAgent:
             model=model,
             max_steps=self.max_steps,
             verbosity_level=1 if self.verbose else 0,
+            executor_kwargs={"timeout_seconds": self.execution_timeout_seconds},
         )
         return agent
 
@@ -690,6 +745,13 @@ class RLMAgent:
             WRONG — never embed the full context in a sub-call string:
                 rlm_call(f"Summarise: {{rlm_context}}")
 
+            IMPORTANT — always validate your splits before processing:
+                After splitting `rlm_context` into chunks, print the number of
+                chunks and a short preview (first 80 chars) of each one.  If the
+                result looks wrong (too many fragments, empty chunks, or headers
+                mixed with content), adjust your splitting logic before making
+                any sub-calls.  A bad split will cascade into bad answers.
+
             If the task is simple enough to answer directly without sub-calls, just do so.
         """)
         task_desc = f"{system_hint}\n\nTask:\n{task}"
@@ -701,7 +763,35 @@ class RLMAgent:
             agent.state["rlm_context"] = context
 
         result = agent.run(task_desc)
+
+        # Capture agent steps (code actions, observations) from the CodeAgent memory.
+        self._capture_agent_steps(agent, node)
+
         return str(result)
+
+    @staticmethod
+    def _capture_agent_steps(agent: CodeAgent, node: _CallNode) -> None:
+        """Extract intermediate step data from the CodeAgent memory into the node."""
+        from smolagents.memory import ActionStep
+
+        for step in agent.memory.steps:
+            if not isinstance(step, ActionStep):
+                continue
+            step_data: dict[str, Any] = {
+                "step_number": step.step_number,
+                "model_output": step.model_output if isinstance(step.model_output, str) else None,
+                "code_action": step.code_action,
+                "observations": step.observations,
+                "is_final_answer": step.is_final_answer,
+            }
+            if step.tool_calls:
+                step_data["tool_calls"] = [
+                    {"name": tc.name, "arguments": tc.arguments, "id": tc.id}
+                    for tc in step.tool_calls
+                ]
+            if step.error:
+                step_data["error"] = str(step.error)
+            node.agent_steps.append(step_data)
 
     def _plain_completion(self, task: str, context: str | None = None, node: _CallNode | None = None) -> str:
         """
