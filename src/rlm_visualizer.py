@@ -58,6 +58,7 @@ def save_json(result: Any, path: str | Path) -> Path:
     """Persist the full RLMCompletion payload as JSON."""
     path = Path(path)
     data = _completion_to_dict(result)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
     return path
 
@@ -1072,5 +1073,6 @@ def save_html(result: Any, path: str | Path) -> Path:
     html_str = _HTML_TEMPLATE.replace("__TRACE_JSON__", trace_json)
     html_str = html_str.replace("__GENERATED_AT__", html.escape(generated_at))
 
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html_str, encoding="utf-8")
     return path
