@@ -940,16 +940,69 @@ count_result = count_agent.completion(count_prompt)</div>
             <li>Some tasks are too long to fit comfortably in one context window</li>
             <li>Some tasks are easier if we solve local subproblems first</li>
             <li>Some tasks benefit from a tree of intermediate results instead of one long prompt</li>
+            <li>As context length grows, plain LLMs often suffer <strong>context rot</strong>; recursive slicing avoids asking one prompt to carry everything at once</li>
           </ul>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Mental model</h2>
           <p>Think of it as divide-and-conquer for inference: split, solve smaller pieces, then aggregate.</p>
-          <p>This is especially useful for search, summarisation, long-context reasoning, and structured analysis.</p>
+          <p>This is especially useful for search, summarisation, long-context reasoning, and structured analysis over inputs that would otherwise degrade a single-shot prompt.</p>
         </div>
       </div>
       <footer class="footer">
         <span>RLMs trade a single large reasoning jump for a sequence of smaller ones.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Author blog</div>
+        <h2>What the original RLM blog makes explicit</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <ul>
+            <li><strong>Context lives in the REPL, not the prompt.</strong> The model can inspect a huge document as data, then slice only the part needed for each sub-call.</li>
+            <li><strong>Recursion is the scaling trick.</strong> The model can call itself on smaller subproblems until each piece is easy enough to solve.</li>
+            <li><strong>This targets context rot directly.</strong> Instead of one overloaded prompt, the system keeps most of the context out of the active message payload.</li>
+            <li><strong>It is an inference pattern, not a new base model.</strong> The blog emphasizes that RLM behavior can be built on top of existing models plus a REPL/tool interface.</li>
+          </ul>
+        </div>
+        <div class="tree-board" aria-label="Adapted conceptual figure of the original RLM mechanism">
+          <div class="tree-row">
+            <div class="tree-box root">
+              <strong>Huge context stored once</strong><br>
+              <code>rlm_context = long_document</code>
+            </div>
+          </div>
+          <div class="tree-arrow">↓</div>
+          <div class="tree-row">
+            <div class="tree-box child">
+              <strong>Inspect / slice</strong><br>
+              search, split, sample, preview
+            </div>
+            <div class="tree-box child">
+              <strong>Delegate</strong><br>
+              <code>llm_call(...)</code> or <code>rlm_call(...)</code>
+            </div>
+          </div>
+          <div class="tree-arrow">↓</div>
+          <div class="tree-row">
+            <div class="tree-box leaf">
+              local answer A
+            </div>
+            <div class="tree-box leaf">
+              local answer B
+            </div>
+            <div class="tree-box leaf">
+              aggregate final answer
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Adapted from Alex Zhang’s 2025 RLM blog schematic: the big idea is “context as data, recursion as control flow.”</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -989,6 +1042,44 @@ count_result = count_agent.completion(count_prompt)</div>
       </div>
       <footer class="footer">
         <span>RLM is not a different model. It is a different inference pattern.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Author blog results</div>
+        <h2>Headline findings reported by the original author</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <div class="metric-grid">
+            <div class="metric">
+              <strong>64.9%</strong>
+              OOLONG accuracy reported for RLM + GPT-5-mini
+            </div>
+            <div class="metric">
+              <strong>30.3%</strong>
+              OOLONG accuracy reported for plain GPT-5 baseline
+            </div>
+            <div class="metric">
+              <strong>&gt;10M</strong>
+              Tokens of context discussed without the same degradation pattern
+            </div>
+          </div>
+          <p style="margin-top:1rem;">The blog’s key claim is not just “slightly better prompts.” It reports that recursive orchestration can <strong>more than double</strong> long-context benchmark accuracy while also reducing cost per query in some settings.</p>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">How to read these figures</h2>
+          <ul>
+            <li><strong>OOLONG:</strong> evidence that recursive decomposition beats a stronger single-shot baseline on long-context QA.</li>
+            <li><strong>BrowseComp-Plus / deep research:</strong> evidence that the same pattern helps on compositional, research-style questions — not just retrieval.</li>
+            <li><strong>Context scaling plot:</strong> the blog frames RLM as a way to avoid classic <em>context rot</em> as input length grows.</li>
+          </ul>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Source: Alex Zhang, “Recursive Language Models” (2025). Results summarized here are deck-ready paraphrases, not copied figures.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1297,8 +1388,9 @@ save_html(data, "trace_reloaded.html")</code></pre>
           <ol>
             <li>Warm-up: letter counting (exactness failure mode)</li>
             <li>Why Python tools help (deterministic computation)</li>
-            <li>Define RLM and tool roles (<code>llm_call</code> vs <code>rlm_call</code>)</li>
-            <li>Show internal mechanism + prompt tracing + HTML viewer</li>
+            <li>Define RLM and show the author-blog framing (context as data, recursion as control flow)</li>
+            <li>Use the benchmark slide to motivate why this matters beyond toy demos</li>
+            <li>Show tool roles, internal mechanism, prompt tracing, and the HTML viewer</li>
             <li>Notebook 03: recursive summarization + comprehension Q&amp;A</li>
             <li>Notebook 04: plain LLM vs RLM comparison + injection isolation</li>
             <li>Close with split-validation lesson and one-sentence summary</li>
@@ -1306,7 +1398,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
-          <p>The sequence moves from intuition → mechanism → evidence. Notebook 03 proves recursive comprehension on long context, and Notebook 04 adds a clean baseline comparison plus a practical security case (prompt-injection isolation).</p>
+          <p>The sequence moves from intuition → author motivation → mechanism → evidence. The added blog slides give a compact “why now?” bridge before the notebook demos, so the live section feels anchored rather than abrupt.</p>
         </div>
       </div>
       <footer class="footer">
