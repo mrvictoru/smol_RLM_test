@@ -1183,12 +1183,12 @@ save_html(data, "trace_reloaded.html")</code></pre>
 
     <section class="slide">
       <header>
-        <div class="eyebrow">Showcase</div>
-        <h2>Recursive summarization &amp; comprehension Q&amp;A</h2>
+        <div class="eyebrow">Showcase — Notebook 03</div>
+        <h2>Recursive summarization &amp; long-context Q&amp;A</h2>
       </header>
       <div class="content">
         <div class="card">
-          <p>Notebook 03 demonstrates what makes RLM <strong>fundamentally different</strong> from a plain LLM call — the agent <em>must</em> decompose and delegate.</p>
+          <p>Notebook 03 demonstrates what makes RLM <strong>fundamentally different</strong> from a plain LLM call: the agent <em>must</em> decompose and delegate.</p>
           <table>
             <thead>
               <tr><th>Experiment</th><th>Why sub-agents are required</th></tr>
@@ -1198,15 +1198,50 @@ save_html(data, "trace_reloaded.html")</code></pre>
               <tr><td><strong>B — Natural-Language Q&amp;A</strong></td><td>Facts are embedded in natural prose (numbers as words, no labels). Sub-agents must <em>read and comprehend</em> each section.</td></tr>
             </tbody>
           </table>
-          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Document: ~6,000-word multi-section corporate report with 6 sections, ~90 paragraphs, 5 comprehension questions. Uses block-format <code>SECTION:</code> separators for reliable splitting.</p>
+          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Document: ~6,000-word multi-section corporate report, 6 sections, ~90 paragraphs, 5 comprehension questions. Uses block-format <code>SECTION:</code> separators for reliable splitting.</p>
         </div>
         <div class="callout">
-          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this is hard for a plain LLM</h2>
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Core insight</h2>
           <p>A single-shot LLM must process the entire document at once. The RLM splits by section, delegates comprehension to sub-agents, and aggregates results — turning a reading-comprehension problem into a <strong>recursive search algorithm</strong>. Regex shortcuts are impossible because facts are written as natural prose.</p>
         </div>
       </div>
       <footer class="footer">
         <span>Run notebooks/03_rlm_long_context_qa.ipynb for a live demo with full trace visualization.</span>
+        <div class="progress"><span></span></div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div class="eyebrow">Showcase — Notebook 04</div>
+        <h2>Plain LLM vs RLM + prompt-injection isolation</h2>
+      </header>
+      <div class="content">
+        <div class="card">
+          <table>
+            <thead>
+              <tr><th>Experiment</th><th>What it demonstrates</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A — Long-context Q&amp;A comparison</strong></td>
+                <td>Runs the same task twice: plain single-shot LLM (full document in prompt) vs. RLM decomposition (context as <code>rlm_context</code> variable), then compares accuracy and runtime side by side.</td>
+              </tr>
+              <tr>
+                <td><strong>B — Prompt-injection isolation</strong></td>
+                <td>Plants hostile instructions inside document sections and checks whether outputs contain injected markers (fake values / attacker email) or preserve the real answers.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Key setup: the same base report is used for both approaches, so differences are attributable to orchestration strategy rather than content changes.</p>
+        </div>
+        <div class="callout">
+          <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Security angle</h2>
+          <p>In plain LLM mode, document text is part of the prompt, so injected instructions can directly compete with user intent. In RLM mode, context is treated as data in Python state and processed in slices, so hostile content is less able to override the full task objective.</p>
+        </div>
+      </div>
+      <footer class="footer">
+        <span>Run notebooks/04_llm_vs_rlm_comparison.ipynb for direct comparison and injection analysis.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1260,26 +1295,22 @@ save_html(data, "trace_reloaded.html")</code></pre>
       <div class="content">
         <div class="card">
           <ol>
-            <li>Open with the letter-counting question</li>
-            <li>Explain why Python execution improves reliability</li>
-            <li>Define RLM as recursive task decomposition</li>
-            <li>Show the two-tool slide (llm_call vs. rlm_call)</li>
-            <li>Show the internal mechanism slide</li>
-            <li>Show the summarisation walkthrough</li>
-            <li>Demonstrate the interactive HTML trace viewer</li>
-            <li>Run the recursive-power showcase: summarization + Q&amp;A (Notebook 03)</li>
-            <li>Discuss lessons learned: document format &amp; split validation</li>
-            <li>Optionally switch to the notebook for live examples</li>
-            <li>Finish with prompt tracing and saved metadata</li>
+            <li>Warm-up: letter counting (exactness failure mode)</li>
+            <li>Why Python tools help (deterministic computation)</li>
+            <li>Define RLM and tool roles (<code>llm_call</code> vs <code>rlm_call</code>)</li>
+            <li>Show internal mechanism + prompt tracing + HTML viewer</li>
+            <li>Notebook 03: recursive summarization + comprehension Q&amp;A</li>
+            <li>Notebook 04: plain LLM vs RLM comparison + injection isolation</li>
+            <li>Close with split-validation lesson and one-sentence summary</li>
           </ol>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Why this order works</h2>
-          <p>The audience gets a full conceptual story even if you never leave the slide deck. The notebooks then become supporting evidence, not a dependency for understanding. The summarization + Q&amp;A demo is the climactic proof that RLM works on tasks requiring genuine LLM comprehension — not just pattern matching.</p>
+          <p>The sequence moves from intuition → mechanism → evidence. Notebook 03 proves recursive comprehension on long context, and Notebook 04 adds a clean baseline comparison plus a practical security case (prompt-injection isolation).</p>
         </div>
       </div>
       <footer class="footer">
-        <span>The deck now stands on its own. The notebooks are optional for live proof.</span>
+        <span>Use Notebook 03 for recursive capability, then Notebook 04 for comparison + security.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
