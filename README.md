@@ -122,7 +122,7 @@ Navigate to **http://localhost:8888** in your browser.
 | `01_rlm_basics.ipynb` | Core concepts, architecture, simple examples |
 | `02_rlm_experiments.ipynb` | Session-ready demo flow: letter counting, prompt tracing, Needle-in-a-Haystack, hierarchical summarisation |
 | `03_rlm_long_context_qa.ipynb` | **Showcase**: hierarchical summarization + natural-language comprehension Q&A over a multi-section corporate report — demonstrates recursive sub-agent decomposition, split validation, call-tree inspection, accuracy verification, and interactive HTML visualization |
-| `04_llm_vs_rlm_comparison.ipynb` | **Comparison + security**: plain LLM vs RLM on long-context Q&A, plus prompt-injection isolation test where hostile instructions are planted inside document context |
+| `04_llm_vs_rlm_comparison.ipynb` | **Comparison + security**: plain LLM vs RLM on long-context Q&A, plus prompt-injection isolation test where hostile instructions are planted inside document context. The benchmark corpus, poisoned variant, and ground-truth questions are loaded from `notebooks/data/04_llm_vs_rlm/` rather than built inline in the notebook. |
 
 ### 5. Open the presentation slides
 
@@ -135,7 +135,7 @@ Suggested flow for a live session:
 2. Move to `02_rlm_experiments.ipynb` for the letter-counting demo.
 3. Continue in the same notebook for recursive examples and prompt tracing.
 4. Run `03_rlm_long_context_qa.ipynb` for the recursive-power showcase (summarization + Q&A).
-5. Run `04_llm_vs_rlm_comparison.ipynb` for plain LLM vs RLM comparison and prompt-injection isolation.
+5. Run `04_llm_vs_rlm_comparison.ipynb` for plain LLM vs RLM comparison and prompt-injection isolation. Notebook 04 now reads its benchmark assets from `notebooks/data/04_llm_vs_rlm/`, so report text, injected variants, and questions can be edited without touching notebook code.
 6. Open the generated HTML trace files in `logs/` to explore interactive call trees.
 
 ---
@@ -158,7 +158,13 @@ Suggested flow for a live session:
     ├── 01_rlm_basics.ipynb
     ├── 02_rlm_experiments.ipynb
     ├── 03_rlm_long_context_qa.ipynb
-    └── 04_llm_vs_rlm_comparison.ipynb
+    ├── 04_llm_vs_rlm_comparison.ipynb
+    └── data/
+        └── 04_llm_vs_rlm/
+            ├── long_report.txt
+            ├── injected_report.txt
+            ├── questions.json
+            └── README.md
 ```
 
 ---

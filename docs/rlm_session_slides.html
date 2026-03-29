@@ -1316,7 +1316,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
             <tbody>
               <tr>
                 <td><strong>A — Long-context Q&amp;A comparison</strong></td>
-                <td>Runs the same task twice: plain single-shot LLM (full document in prompt) vs. RLM decomposition (context as <code>rlm_context</code> variable), then compares accuracy and runtime side by side.</td>
+                <td>Runs the same task twice: plain single-shot LLM (full document in prompt) vs. RLM decomposition (context as <code>rlm_context</code> variable), then compares accuracy and runtime side by side. The benchmark report and questions are loaded from external files, so the notebook stays focused on orchestration.</td>
               </tr>
               <tr>
                 <td><strong>B — Prompt-injection isolation</strong></td>
@@ -1324,7 +1324,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
               </tr>
             </tbody>
           </table>
-          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Key setup: the same base report is used for both approaches, so differences are attributable to orchestration strategy rather than content changes.</p>
+          <p style="margin-top:1rem; font-size:0.95em; color:var(--muted);">Key setup: the same base report is used for both approaches, and Notebook 04 now loads the clean report, poisoned variant, and question set from <code>notebooks/data/04_llm_vs_rlm/</code>, so differences are attributable to orchestration strategy rather than content changes.</p>
         </div>
         <div class="callout">
           <h2 style="font-size:2rem; max-width:none; margin-bottom:0.9rem;">Security angle</h2>
@@ -1332,7 +1332,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
         </div>
       </div>
       <footer class="footer">
-        <span>Run notebooks/04_llm_vs_rlm_comparison.ipynb for direct comparison and injection analysis.</span>
+        <span>Run notebooks/04_llm_vs_rlm_comparison.ipynb for direct comparison and injection analysis; edit benchmark assets in notebooks/data/04_llm_vs_rlm/.</span>
         <div class="progress"><span></span></div>
       </footer>
     </section>
@@ -1392,7 +1392,7 @@ save_html(data, "trace_reloaded.html")</code></pre>
             <li>Use the benchmark slide to motivate why this matters beyond toy demos</li>
             <li>Show tool roles, internal mechanism, prompt tracing, and the HTML viewer</li>
             <li>Notebook 03: recursive summarization + comprehension Q&amp;A</li>
-            <li>Notebook 04: plain LLM vs RLM comparison + injection isolation</li>
+            <li>Notebook 04: plain LLM vs RLM comparison + injection isolation, backed by editable external benchmark files</li>
             <li>Close with split-validation lesson and one-sentence summary</li>
           </ol>
         </div>
