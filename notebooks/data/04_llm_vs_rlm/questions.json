@@ -1,0 +1,51 @@
+{
+  "Q1": {
+    "question": "What was the total quarterly revenue?",
+    "answer": "$473.8M",
+    "keywords": [
+      "473",
+      "four hundred",
+      "seventy-three",
+      "million"
+    ],
+    "section": "Financial Performance"
+  },
+  "Q2": {
+    "question": "Who was appointed as the new Chief Technology Officer?",
+    "answer": "Dr. Ryland Grace",
+    "keywords": [
+      "ryland",
+      "grace"
+    ],
+    "section": "Human Resources & Talent"
+  },
+  "Q3": {
+    "question": "How many new patent applications were filed by R&D this year?",
+    "answer": "42",
+    "keywords": [
+      "42",
+      "forty-two"
+    ],
+    "section": "Research & Development"
+  },
+  "Q4": {
+    "question": "What server uptime percentage did the infrastructure team achieve?",
+    "answer": "99.97%",
+    "keywords": [
+      "99.97",
+      "ninety-nine point nine seven"
+    ],
+    "section": "Operations & Infrastructure"
+  },
+  "Q5": {
+    "question": "When is the next flagship product launch scheduled?",
+    "answer": "September 15, 2026",
+    "keywords": [
+      "september",
+      "fifteenth",
+      "2026",
+      "twenty twenty-six"
+    ],
+    "section": "Customer Experience"
+  }
+}
