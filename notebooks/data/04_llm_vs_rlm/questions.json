@@ -1,51 +1,301 @@
 {
   "Q1": {
-    "question": "What was the total quarterly revenue?",
-    "answer": "$473.8M",
-    "keywords": [
-      "473",
-      "four hundred",
-      "seventy-three",
-      "million"
+    "question": "What was the company's total annual revenue for the fiscal year, and what was the year-over-year growth rate?",
+    "answer": "Total annual revenue was $2,147M with year-over-year growth of 14.3%.",
+    "components": [
+      {
+        "label": "total_revenue",
+        "description": "Total annual revenue figure",
+        "keywords": [
+          "two billion one hundred and forty-seven",
+          "2,147",
+          "2147"
+        ],
+        "source_sections": [
+          "Financial Performance \u2014 Revenue & Growth"
+        ]
+      },
+      {
+        "label": "yoy_growth",
+        "description": "Year-over-year growth rate",
+        "keywords": [
+          "fourteen point three percent",
+          "14.3"
+        ],
+        "source_sections": [
+          "Financial Performance \u2014 Revenue & Growth"
+        ]
+      }
     ],
-    "section": "Financial Performance"
+    "distractors_note": "Quarterly figures ($498M, $523M, $547M, $579M), prior-year $1,879M, recurring revenue $1,612M, run-rate $2.4B"
   },
   "Q2": {
-    "question": "Who was appointed as the new Chief Technology Officer?",
-    "answer": "Dr. Ryland Grace",
-    "keywords": [
-      "ryland",
-      "grace"
+    "question": "Who were the three new C-suite executives appointed during the fiscal year, what role does each hold, and which strategic area is each responsible for?",
+    "answer": "Dr. Elena Vasquez as CTO (technology and product innovation), Marcus Chen as CFO (finance, strategy, and investor relations), Sarah Okonkwo as COO (global operations and supply chain).",
+    "components": [
+      {
+        "label": "cto",
+        "description": "CTO name and responsibility",
+        "keywords": [
+          "elena vasquez",
+          "vasquez"
+        ],
+        "source_sections": [
+          "Leadership & Organisational Changes"
+        ]
+      },
+      {
+        "label": "cfo",
+        "description": "CFO name and responsibility",
+        "keywords": [
+          "marcus chen",
+          "chen"
+        ],
+        "source_sections": [
+          "Leadership & Organisational Changes"
+        ]
+      },
+      {
+        "label": "coo",
+        "description": "COO name and responsibility",
+        "keywords": [
+          "sarah okonkwo",
+          "okonkwo"
+        ],
+        "source_sections": [
+          "Leadership & Organisational Changes",
+          "Human Resources & Workforce Development"
+        ]
+      }
     ],
-    "section": "Human Resources & Talent"
+    "distractors_note": "Dr. Raymond Liu (SVP, not C-suite), Jennifer Walsh (board member, not executive), David Hartley (existing CEO)"
   },
   "Q3": {
-    "question": "How many new patent applications were filed by R&D this year?",
-    "answer": "42",
-    "keywords": [
-      "42",
-      "forty-two"
+    "question": "What is the company's total R&D budget for the year and how much funding was allocated to each of the three incubation programmes?",
+    "answer": "Total R&D: $412M. Incubation programmes: autonomous operations $45M, privacy-preserving ML $28M, edge intelligence $37M.",
+    "components": [
+      {
+        "label": "total_rd",
+        "description": "Total R&D budget",
+        "keywords": [
+          "four hundred and twelve million",
+          "412"
+        ],
+        "source_sections": [
+          "Research & Development \u2014 Core Engineering"
+        ]
+      },
+      {
+        "label": "autonomous_ops",
+        "description": "Autonomous operations programme budget",
+        "keywords": [
+          "forty-five million",
+          "45"
+        ],
+        "source_sections": [
+          "Research & Development \u2014 AI & Advanced Analytics"
+        ]
+      },
+      {
+        "label": "privacy_ml",
+        "description": "Privacy-preserving ML programme budget",
+        "keywords": [
+          "twenty-eight million",
+          "28"
+        ],
+        "source_sections": [
+          "Research & Development \u2014 AI & Advanced Analytics"
+        ]
+      },
+      {
+        "label": "edge_intel",
+        "description": "Edge intelligence programme budget",
+        "keywords": [
+          "thirty-seven million",
+          "37"
+        ],
+        "source_sections": [
+          "Research & Development \u2014 AI & Advanced Analytics"
+        ]
+      }
     ],
-    "section": "Research & Development"
+    "distractors_note": "Prior-year R&D $348M, engineering CapEx $89M, partner co-investment $17M, total incubation $110M"
   },
   "Q4": {
-    "question": "What server uptime percentage did the infrastructure team achieve?",
-    "answer": "99.97%",
-    "keywords": [
-      "99.97",
-      "ninety-nine point nine seven"
+    "question": "What was the overall production platform uptime achieved this year and what new security certifications were obtained during the fiscal year?",
+    "answer": "Overall platform uptime was 99.98%. New certifications: ISO 27001:2022 upgrade and FedRAMP Moderate Authorization.",
+    "components": [
+      {
+        "label": "uptime",
+        "description": "Overall platform uptime percentage",
+        "keywords": [
+          "ninety-nine point nine eight",
+          "99.98"
+        ],
+        "source_sections": [
+          "Operations & Infrastructure \u2014 Cloud & Data Centres"
+        ]
+      },
+      {
+        "label": "iso_cert",
+        "description": "ISO 27001:2022 certification upgrade",
+        "keywords": [
+          "27001",
+          "twenty twenty-two"
+        ],
+        "source_sections": [
+          "Operations & Infrastructure \u2014 Security & Reliability"
+        ]
+      },
+      {
+        "label": "fedramp",
+        "description": "FedRAMP Moderate authorization",
+        "keywords": [
+          "fedramp moderate",
+          "fedramp"
+        ],
+        "source_sections": [
+          "Operations & Infrastructure \u2014 Security & Reliability"
+        ]
+      }
     ],
-    "section": "Operations & Infrastructure"
+    "distractors_note": "Analytics service 99.95%, prior-year 99.93%, SLA target 99.95%, aspirational 99.99%, pursuing FedRAMP High (not achieved), ISO 27701 (planned), PCI DSS (pre-existing)"
   },
   "Q5": {
-    "question": "When is the next flagship product launch scheduled?",
-    "answer": "September 15, 2026",
-    "keywords": [
-      "september",
-      "fifteenth",
-      "2026",
-      "twenty twenty-six"
+    "question": "How has the company's overall customer retention rate changed over the past three years, and what specific programmes were credited with driving the improvement?",
+    "answer": "Retention improved from 87.2% three years ago to 93.7% this year. Key programmes: dedicated success architects, proactive health scoring, quarterly business reviews, and the technology alliance programme's integration connectors.",
+    "components": [
+      {
+        "label": "retention_start",
+        "description": "Retention rate three years ago",
+        "keywords": [
+          "eighty-seven point two",
+          "87.2"
+        ],
+        "source_sections": [
+          "Customer Experience & Market Position"
+        ]
+      },
+      {
+        "label": "retention_current",
+        "description": "Current retention rate",
+        "keywords": [
+          "ninety-three point seven",
+          "93.7"
+        ],
+        "source_sections": [
+          "Customer Experience & Market Position"
+        ]
+      },
+      {
+        "label": "programmes",
+        "description": "Programmes driving improvement",
+        "keywords": [
+          "success architect",
+          "health scor",
+          "business review"
+        ],
+        "source_sections": [
+          "Customer Experience & Market Position",
+          "Sales & Partnerships"
+        ]
+      }
     ],
-    "section": "Customer Experience"
+    "distractors_note": "Enterprise retention 97.2% (segment only), SMB 88.3%, CSAT 87% (different metric), trial conversion 34%"
+  },
+  "Q6": {
+    "question": "How much did the company's sustainability initiatives save in total operational costs this year, and what were the three largest contributing programmes with their individual savings?",
+    "answer": "Total: $31M. Three largest: data-centre energy optimisation ($18.4M), fleet electrification ($7.8M), waste reduction & circular procurement ($4.8M).",
+    "components": [
+      {
+        "label": "total_savings",
+        "description": "Total ESG operational savings",
+        "keywords": [
+          "thirty-one million",
+          "31"
+        ],
+        "source_sections": [
+          "Environmental, Social & Governance",
+          "Financial Performance \u2014 Cost Structure & Margins"
+        ]
+      },
+      {
+        "label": "energy_savings",
+        "description": "Data-centre energy savings",
+        "keywords": [
+          "eighteen point four",
+          "18.4"
+        ],
+        "source_sections": [
+          "Environmental, Social & Governance",
+          "Operations & Infrastructure \u2014 Cloud & Data Centres"
+        ]
+      },
+      {
+        "label": "fleet_savings",
+        "description": "Fleet electrification savings",
+        "keywords": [
+          "seven point eight",
+          "7.8"
+        ],
+        "source_sections": [
+          "Environmental, Social & Governance"
+        ]
+      },
+      {
+        "label": "waste_savings",
+        "description": "Waste reduction savings",
+        "keywords": [
+          "four point eight",
+          "4.8"
+        ],
+        "source_sections": [
+          "Environmental, Social & Governance"
+        ]
+      }
+    ],
+    "distractors_note": "Prior-year savings $19M, projected future $42M, Dallas retrofit alone $11M, procurement savings $37M (different category)"
+  },
+  "Q7": {
+    "question": "How many net new positions is the company planning to add next fiscal year, and how will the hiring be distributed across the major functional areas?",
+    "answer": "1,800 net new positions: ~700 in engineering & product, ~350 in sales & customer success, ~750 in operations & G&A.",
+    "components": [
+      {
+        "label": "total_new",
+        "description": "Total net new positions planned",
+        "keywords": [
+          "one thousand eight hundred",
+          "1,800",
+          "1800"
+        ],
+        "source_sections": [
+          "Human Resources & Workforce Development",
+          "Strategic Outlook & Future Initiatives"
+        ]
+      },
+      {
+        "label": "engineering_hire",
+        "description": "Engineering & product hiring",
+        "keywords": [
+          "seven hundred",
+          "700"
+        ],
+        "source_sections": [
+          "Strategic Outlook & Future Initiatives"
+        ]
+      },
+      {
+        "label": "sales_hire",
+        "description": "Sales & customer success hiring",
+        "keywords": [
+          "three hundred and fifty",
+          "350"
+        ],
+        "source_sections": [
+          "Strategic Outlook & Future Initiatives"
+        ]
+      }
+    ],
+    "distractors_note": "Current headcount 12,347, prior year 10,912, gross hiring 2,100 (not net), contractors 3,200, AI team target 340 (subset)"
   }
 }
