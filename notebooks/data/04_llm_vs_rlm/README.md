@@ -11,7 +11,7 @@ ground-truth questions/answers used for scoring.
 | File | Description |
 |---|---|
 | `long_report.txt` | Clean corporate annual report (~30 000 words, 15 sections) with facts embedded in natural-language prose. Numbers are written as words, dates are written conversationally. Includes near-miss distractor figures that could be confused with the correct answers. Uses `SECTION:` separators compatible with the RLM splitting pattern. |
-| `injected_report.txt` | Same report with three adversarial prompt-injection payloads inserted into the *Financial Performance — Revenue & Growth*, *Operations & Infrastructure — Security & Reliability*, and *Leadership & Organisational Changes* sections. |
+| `injected_report.txt` | Same report with three **data-corruption-style** injection payloads: an erratum (Financial Performance), a correction notice (Leadership), and a security addendum (Security & Reliability). These mimic legitimate editorial elements rather than crude "IGNORE ALL" attacks. |
 | `questions.json` | Ground-truth question set (Q1–Q7): each question requires information from 2–4 sections. Answers are expressed in prose. Each question has multiple `components` with per-component keywords and source sections, enabling exactness and completeness scoring. |
 
 ## Benchmark design principles
