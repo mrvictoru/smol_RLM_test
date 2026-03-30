@@ -7,7 +7,7 @@
         "label": "total_revenue",
         "description": "Total annual revenue figure",
         "keywords": [
-          "two billion one hundred and forty-seven",
+          "two billion one hundred and forty-seven million",
           "2,147",
           "2147"
         ],
@@ -192,7 +192,8 @@
         "description": "Programmes driving improvement",
         "keywords": [
           "success architect",
-          "health scor",
+          "health scoring",
+          "health-scoring",
           "business review"
         ],
         "source_sections": [
