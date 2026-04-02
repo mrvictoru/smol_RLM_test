@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recursive Language Models — Session Slides</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --bg-accent: #0d1b2f;
+      --card: rgba(13, 27, 47, 0.76);
+      --card-strong: rgba(10, 18, 34, 0.92);
+      --text: #e8eefc;
+      --muted: #9db0d2;
+      --line: rgba(157, 176, 210, 0.2);
+      --primary: #72d7ff;
+      --secondary: #88f7c5;
+      --warning: #ffd479;
+      --danger: #ff9d9d;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      --radius: 28px;
+      --max-width: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: radial-gradient(circle at top, #11284a 0%, var(--bg) 55%, #030814 100%); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { overflow: hidden; }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+      gap: 20px;
+    }
+
+    .topbar,
+    .footerbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .badge,
+    .pill,
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.01em;
+    }
+
+    .deck {
+      position: relative;
+      flex: 1;
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 28px;
+      padding: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(114, 215, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+        var(--card);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateX(40px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .slide-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 1.02; letter-spacing: -0.04em; }
+    h2 { font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.05; letter-spacing: -0.03em; }
+    h3 { font-size: 1.15rem; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.12em; }
+    p, li { font-size: clamp(1rem, 1.75vw, 1.25rem); line-height: 1.5; color: var(--muted); }
+    strong { color: var(--text); }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--card-strong);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card ul,
+    .callout ul,
+    .plain-list {
+      margin: 0;
+      padding-left: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: end;
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 20px;
+      align-content: center;
+    }
+
+    .callout {
+      border-left: 4px solid var(--primary);
+      padding: 18px 20px;
+      border-radius: 18px;
+      background: rgba(114, 215, 255, 0.08);
+      display: grid;
+      gap: 8px;
+    }
+
+    .metric {
+      display: grid;
+      gap: 8px;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .metric .value {
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .compare .card { min-height: 100%; }
+    .label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    pre {
+      margin: 0;
+      padding: 20px;
+      background: #06101d;
+      border: 1px solid rgba(136, 247, 197, 0.16);
+      border-radius: 20px;
+      color: #d6f0ff;
+      font-size: clamp(0.9rem, 1.45vw, 1.05rem);
+      line-height: 1.55;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    code { font-family: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace; }
+
+    .flow {
+      display: grid;
+      gap: 14px;
+    }
+
+    .flow-step {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .flow-step .num {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #07111f;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .progress {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.25s ease;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    button:hover { background: rgba(255,255,255,0.08); }
+    button:disabled { opacity: 0.5; cursor: default; }
+
+    .muted { color: var(--muted); }
+    .accent { color: var(--primary); }
+    .good { color: var(--secondary); }
+    .warn { color: var(--warning); }
+    .bad { color: var(--danger); }
+
+    .footerbar { font-size: 0.95rem; color: var(--muted); }
+    .slide-count { min-width: 78px; text-align: center; }
+
+    @media (max-width: 980px) {
+      body { overflow: auto; }
+      .app { min-height: auto; }
+      .deck { overflow: visible; }
+      .slide {
+        position: static;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        margin-bottom: 20px;
+      }
+      .slide:not(.active) { display: none; }
+      .hero,
+      .grid-2,
+      .grid-3,
+      .compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <span class="badge">Recursive Language Models · session intro deck</span>
+      <div class="controls">
+        <span class="key">← / →</span>
+        <span class="key">Space</span>
+      </div>
+    </div>
+
+    <main class="deck" aria-live="polite">
+      <section class="slide active" data-title="Title">
+        <div class="slide-head">
+          <div>
+            <h3>Before the repo walkthrough</h3>
+            <h1>Recursive Language Models</h1>
+          </div>
+          <span class="pill">Adapted from Alex Zhang’s RLM write-up and this repo’s implementation</span>
+        </div>
+        <div class="hero">
+          <div class="hero-copy">
+            <p><strong>Main idea:</strong> don’t force the whole document through one prompt. Keep the data outside the prompt, let the model inspect it in code, and solve the task through smaller sub-calls.</p>
+            <div class="callout">
+              <p><strong>Framing for this session</strong></p>
+              <p>First: the concept. Next: how this repository re-creates it with <code>smolagents</code>. Then: the notebook demos and trace visualizer.</p>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="metric">
+              <span class="label">Classic LLM</span>
+              <span class="value">1 big prompt</span>
+              <p>Context is embedded directly into the model input.</p>
+            </div>
+            <div class="metric">
+              <span class="label">RLM</span>
+              <span class="value">Many smaller calls</span>
+              <p>Context stays in an external execution environment and is queried as needed.</p>
+            </div>
+            <div class="metric">
+              <span class="label">Benefit</span>
+              <span class="value">Scalable reasoning</span>
+              <p>Large tasks become trees of manageable sub-problems.</p>
+            </div>
+            <div class="metric">
+              <span class="label">Session path</span>
+              <span class="value">Slides → Code → Notebook</span>
+              <p>This deck is the conceptual bridge into the live demo.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Why">
+        <div class="slide-head">
+          <div>
+            <h3>The motivation</h3>
+            <h2>Why not just keep increasing context windows?</h2>
+          </div>
+          <span class="pill">Long prompts are expensive, brittle, and hard to steer</span>
+        </div>
+        <div class="compare">
+          <div class="card">
+            <span class="label">Single-shot long-context prompting</span>
+            <ul>
+              <li>Everything is packed into one prompt string.</li>
+              <li>The model must find the right evidence while also reasoning about the task.</li>
+              <li>As prompts get longer, attention is diluted and irrelevant text competes with useful text.</li>
+              <li>Instructions and raw data live in the same channel.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="label">RLM view</span>
+            <ul>
+              <li>Use the model as an orchestrator, not just a one-shot responder.</li>
+              <li>Let it inspect data programmatically and focus only on relevant slices.</li>
+              <li>Turn one impossible call into a sequence of simpler, cheaper calls.</li>
+              <li>Separate <strong>instructions</strong> from <strong>data</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>Intuition:</strong> if a human would skim, split, search, summarize, and combine, an RLM should be allowed to do the same.</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Core idea">
+        <div class="slide-head">
+          <div>
+            <h3>Key concept</h3>
+            <h2>Context lives in the environment, not in the prompt</h2>
+          </div>
+          <span class="pill">This is the central shift</span>
+        </div>
+        <div class="compare">
+          <div class="card">
+            <span class="label">Traditional call</span>
+            <pre><code>response = llm.completion(prompt)
+# prompt contains task + document text</code></pre>
+            <p>The raw document is copied into the prompt every time.</p>
+          </div>
+          <div class="card">
+            <span class="label">RLM call</span>
+            <pre><code>response = rlm.completion(task, context)
+# context is stored externally</code></pre>
+            <p>The model receives a task plus tools for inspecting <code>rlm_context</code>.</p>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <span class="label">Data channel</span>
+            <p><code>rlm_context</code> is a Python variable in the REPL.</p>
+          </div>
+          <div class="card">
+            <span class="label">Instruction channel</span>
+            <p>The prompt describes the task and available tools, not the full document.</p>
+          </div>
+          <div class="card">
+            <span class="label">Result</span>
+            <p>Sub-calls can operate on slices without repeatedly re-embedding the entire context.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Mechanics">
+        <div class="slide-head">
+          <div>
+            <h3>How it works</h3>
+            <h2>An RLM solves tasks by decomposition</h2>
+          </div>
+          <span class="pill">The model writes code to orchestrate the process</span>
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="num">1</div>
+            <div>
+              <p><strong>Receive task + context.</strong> The system injects the context into the execution environment as <code>rlm_context</code>.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">2</div>
+            <div>
+              <p><strong>Inspect and split.</strong> The model can slice, search, or divide the context using normal Python.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">3</div>
+            <div>
+              <p><strong>Launch child calls.</strong> Small factual lookups can use direct LLM calls; complex sub-problems can recurse again.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">4</div>
+            <div>
+              <p><strong>Aggregate answers.</strong> The parent combines intermediate results into a final response.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Example">
+        <div class="slide-head">
+          <div>
+            <h3>Minimal example</h3>
+            <h2>The pattern is inspect → split → query → merge</h2>
+          </div>
+          <span class="pill">The full document never becomes a child prompt string</span>
+        </div>
+        <div class="grid-2">
+          <pre><code>mid = len(rlm_context) // 2
+left = rlm_call("Summarize first half", rlm_context[:mid])
+right = rlm_call("Summarize second half", rlm_context[mid:])
+final_answer(left + " " + right)</code></pre>
+          <div class="card">
+            <span class="label">What matters</span>
+            <ul>
+              <li>The parent can choose a splitting strategy dynamically.</li>
+              <li>Each child sees only a smaller slice and a narrower task.</li>
+              <li>The decomposition can continue until the slice is simple enough.</li>
+              <li><span class="bad">Avoid:</span> building child prompts with the entire raw context interpolated into strings.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Tools">
+        <div class="slide-head">
+          <div>
+            <h3>Two kinds of sub-calls</h3>
+            <h2>Leaf queries and recursive queries play different roles</h2>
+          </div>
+          <span class="pill">The repo mirrors the paper’s direct vs recursive distinction</span>
+        </div>
+        <div class="compare">
+          <div class="card">
+            <span class="label">Direct leaf call</span>
+            <pre><code>llm_call(sub_task, context_slice)</code></pre>
+            <ul>
+              <li>Fast, one-shot answer on a small slice.</li>
+              <li>Best for extraction, summarization, or local reasoning.</li>
+              <li>Used when the problem is already reduced enough.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="label">Recursive call</span>
+            <pre><code>rlm_call(sub_task, context_slice)</code></pre>
+            <ul>
+              <li>Creates another RLM node with its own REPL state.</li>
+              <li>Useful when a child still needs search, splitting, or aggregation.</li>
+              <li>Builds a call tree instead of a flat prompt.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Benefits">
+        <div class="slide-head">
+          <div>
+            <h3>Why this is interesting</h3>
+            <h2>RLMs change both scale and robustness</h2>
+          </div>
+          <span class="pill">Not just bigger context — better structure</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <span class="label">Scalability</span>
+            <ul>
+              <li>Operate over data larger than one prompt should reasonably contain.</li>
+              <li>Reuse the same orchestration pattern across summarization, QA, retrieval, and synthesis.</li>
+              <li>Keep each model call focused and local.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="label">Robustness</span>
+            <ul>
+              <li>Data is treated as data, not instruction text.</li>
+              <li>Separating context from the prompt reduces accidental steering by hostile text embedded in documents.</li>
+              <li>Explicit split validation helps prevent bad chunking from cascading into bad answers.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>Takeaway:</strong> the win is not only “more tokens.” The win is giving the model a structured way to work over external state.</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Repo mapping">
+        <div class="slide-head">
+          <div>
+            <h3>How this repo demonstrates it</h3>
+            <h2>Concepts from the blog map directly into the code and notebooks</h2>
+          </div>
+          <span class="pill">This deck tees up the live walkthrough</span>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <span class="label">Implementation</span>
+            <p><code>src/rlm_smolagent.py</code> injects <code>rlm_context</code> into a smolagents CodeAgent REPL and exposes recursive sub-call tools.</p>
+          </div>
+          <div class="card">
+            <span class="label">Session demos</span>
+            <p><code>notebooks/02</code>, <code>03</code>, and <code>04</code> show decomposition, long-context QA, and plain LLM vs RLM comparisons.</p>
+          </div>
+          <div class="card">
+            <span class="label">Visualization</span>
+            <p><code>src/rlm_visualizer.py</code> and the saved HTML logs show the recursive call tree and the exact LLM requests.</p>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>Recommended transition:</strong> after this slide, open the repo, show where <code>rlm_context</code> lives, then run the notebooks to make the abstraction concrete.</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Next">
+        <div class="slide-head">
+          <div>
+            <h3>Transition slide</h3>
+            <h2>What to show next</h2>
+          </div>
+          <span class="pill">From concept to implementation</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <span class="label">Code walkthrough</span>
+            <ol class="plain-list">
+              <li>Show the <code>rlm.completion(task, context)</code> interface.</li>
+              <li>Point out that <code>rlm_context</code> is stored in the REPL, not embedded into the prompt.</li>
+              <li>Show <code>llm_call</code> vs <code>rlm_call</code>.</li>
+              <li>Open the trace visualizer to show the call tree.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <span class="label">Notebook demo</span>
+            <ol class="plain-list">
+              <li>Start with the small decomposition examples.</li>
+              <li>Move to long-context Q&amp;A.</li>
+              <li>Finish with the plain LLM vs RLM comparison.</li>
+              <li>Use the logs to inspect what each node actually saw.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>One-sentence summary:</strong> RLMs let language models work over large external context by recursively turning one hard task into many smaller, inspectable tasks.</p>
+        </div>
+      </section>
+    </main>
+
+    <div class="footerbar">
+      <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+      <div class="slide-count"><span id="slide-count">1 / 9</span></div>
+      <div class="controls">
+        <button id="prev-btn" type="button">Previous</button>
+        <button id="next-btn" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const count = document.getElementById('slide-count');
+    const progressBar = document.getElementById('progress-bar');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    let index = 0;
+
+    function render() {
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+      count.textContent = `${index + 1} / ${slides.length}`;
+      progressBar.style.width = `${((index + 1) / slides.length) * 100}%`;
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === slides.length - 1;
+      document.title = `${slides[index].dataset.title} · Recursive Language Models`;
+    }
+
+    function next() { if (index < slides.length - 1) { index += 1; render(); } }
+    function prev() { if (index > 0) { index -= 1; render(); } }
+
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+
+    document.addEventListener('keydown', (event) => {
+      if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        next();
+      }
+      if (["ArrowLeft", "PageUp"].includes(event.key)) {
+        event.preventDefault();
+        prev();
+      }
+      if (event.key === 'Home') {
+        index = 0;
+        render();
+      }
+      if (event.key === 'End') {
+        index = slides.length - 1;
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
