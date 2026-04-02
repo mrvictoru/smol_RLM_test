@@ -631,14 +631,25 @@ final_answer(left + " " + right)</code></pre>
       document.title = `${slides[index].dataset.title} · Recursive Language Models`;
     }
 
-    function next() { if (index < slides.length - 1) { index += 1; render(); } }
-    function prev() { if (index > 0) { index -= 1; render(); } }
+    function next() {
+      if (index < slides.length - 1) {
+        index += 1;
+        render();
+      }
+    }
+
+    function prev() {
+      if (index > 0) {
+        index -= 1;
+        render();
+      }
+    }
 
     prevBtn.addEventListener('click', prev);
     nextBtn.addEventListener('click', next);
 
     document.addEventListener('keydown', (event) => {
-      if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+      if (event.code === 'Space' || ["ArrowRight", "PageDown"].includes(event.key)) {
         event.preventDefault();
         next();
       }
