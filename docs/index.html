@@ -466,15 +466,15 @@
       padding: 14px 16px;
     }
 
-    .slide[data-title="Loop"] .diagram-frame {
+    .slide[data-title="How"] .diagram-frame {
       min-height: 0;
     }
 
-    .slide[data-title="Loop"] .grid-2 {
+    .slide[data-title="How"] .grid-2 {
       align-items: stretch;
     }
 
-    .slide[data-title="Patterns"] .strategy-grid {
+    .slide[data-title="Strategies"] .strategy-grid {
       align-items: stretch;
     }
 
@@ -608,102 +608,139 @@
     </div>
 
     <main class="deck" aria-live="polite">
+
+    <main class="deck" aria-live="polite">
+      <!-- Slide 1: Title -->
       <section class="slide active" data-title="Title">
         <div class="slide-head">
           <div>
-            <h3>Before the repo walkthrough</h3>
+            <h3>Introducing</h3>
             <h1>Recursive Language Models</h1>
           </div>
-          <span class="pill">Concept first, then code, then notebooks</span>
+          <span class="pill">A new way to use LLMs on large documents</span>
         </div>
         <div class="hero hero-title">
           <div class="hero-copy">
-            <p><strong>Main idea:</strong> keep the document outside the prompt and let the model inspect, split, and solve it in code.</p>
+            <p><strong>One sentence:</strong> Instead of feeding an entire document into an AI model at once, let the model break the work into smaller pieces — just like a person would.</p>
             <div class="callout">
-              <p><strong>Framing for this session</strong></p>
-              <p>First: the concept. Next: the repository implementation. Then: the notebook demos and trace visualizer.</p>
+              <p><strong>No prior knowledge needed.</strong> We'll walk through the problem, the idea, and how it works step by step.</p>
             </div>
           </div>
           <div class="card title-summary">
-            <span class="label">At a glance</span>
-            <p>This deck uses one example to show why recursive orchestration works better than stuffing everything into a single prompt.</p>
+            <span class="label">What you'll learn</span>
+            <p>By the end of this deck you'll understand what an RLM is, why it matters, and how it differs from the standard way of using AI models.</p>
             <div class="title-points">
               <div class="title-point">
                 <div class="num">1</div>
                 <div>
-                  <strong>External context</strong>
-                  <span>The document stays in code, not inside the prompt string.</span>
+                  <strong>The problem</strong>
+                  <span>AI models have a reading limit — they can only look at so much text at once.</span>
                 </div>
               </div>
               <div class="title-point">
                 <div class="num">2</div>
                 <div>
-                  <strong>Recursive work</strong>
-                  <span>The model can split the task into smaller sub-calls when it needs to.</span>
+                  <strong>The insight</strong>
+                  <span>Let the model work through a document in manageable pieces, like a person would.</span>
                 </div>
               </div>
               <div class="title-point">
                 <div class="num">3</div>
                 <div>
-                  <strong>Live proof</strong>
-                  <span>The notebook and trace view make the call tree visible.</span>
+                  <strong>The payoff</strong>
+                  <span>Better answers, works on any document size, and more reliable results.</span>
                 </div>
               </div>
-            </div>
-            <div class="title-chips">
-              <span class="title-chip"><span class="dot"></span>Concept</span>
-              <span class="title-chip"><span class="dot"></span>Code</span>
-              <span class="title-chip"><span class="dot"></span>Notebook</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="slide" data-title="Why">
+      <!-- Slide 2: The Problem -->
+      <section class="slide" data-title="Problem">
         <div class="slide-head">
           <div>
-            <h3>The motivation</h3>
-            <h2>Why not just keep increasing context windows?</h2>
+            <h3>The problem</h3>
+            <h2>AI models can only read so much at once</h2>
           </div>
-          <span class="pill">Long prompts are expensive, brittle, and hard to steer</span>
+          <span class="pill">Every model has a "context window" — a hard reading limit</span>
         </div>
         <div class="compare">
           <div class="card">
-            <span class="label">Single-shot long-context prompting</span>
+            <span class="label">What happens today</span>
             <ul>
-              <li>Everything is packed into one prompt string.</li>
-              <li>The model must find the right evidence while also reasoning about the task.</li>
-              <li>As prompts get longer, attention is diluted and irrelevant text competes with useful text.</li>
-              <li>Instructions and raw data live in the same channel.</li>
+              <li>You paste a long document into ChatGPT or another AI model.</li>
+              <li>If the document is too long, it gets cut off or the model loses track of details buried in the middle.</li>
+              <li>The model has to do <strong>everything at once</strong> — find the answer AND read the whole document.</li>
             </ul>
           </div>
           <div class="card">
-            <span class="label">RLM view</span>
+            <span class="label">Why this is a problem</span>
             <ul>
-              <li>Use the model as an orchestrator, not just a one-shot responder.</li>
-              <li>Let it inspect data programmatically and focus only on relevant slices.</li>
-              <li>Turn one impossible call into a sequence of simpler, cheaper calls.</li>
-              <li>Separate <strong>instructions</strong> from <strong>data</strong>.</li>
+              <li>Important details get lost in long documents.</li>
+              <li>The model can't go back and re-read a specific section.</li>
+              <li>Bigger context windows help, but the quality still drops with length.</li>
             </ul>
           </div>
         </div>
         <div class="callout">
-          <p><strong>Intuition:</strong> if a human would skim, split, search, summarize, and combine, an RLM should be allowed to do the same.</p>
+          <p><strong>Analogy:</strong> Imagine being asked to summarize a 200-page report — but you can only glance at it once, for 30 seconds, and you can't take notes.</p>
         </div>
       </section>
 
-      <section class="slide" data-title="Loop">
+      <!-- Slide 3: The Human Analogy -->
+      <section class="slide" data-title="Analogy">
         <div class="slide-head">
           <div>
-            <h3>Figure-level view</h3>
-            <h2>A recursive model call is an API plus an environment</h2>
+            <h3>The insight</h3>
+            <h2>What would a human do instead?</h2>
           </div>
-          <span class="pill">Inspired by the blog’s Figure 2 and Figure 3</span>
+          <span class="pill">Divide and conquer — an idea as old as problem-solving itself</span>
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="num">1</div>
+            <div>
+              <p><strong>Skim the document.</strong> Get a sense of how it's organized — headings, sections, length.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">2</div>
+            <div>
+              <p><strong>Break it into sections.</strong> Decide which parts are relevant and split the work up.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">3</div>
+            <div>
+              <p><strong>Work on each section.</strong> Read and answer questions about one piece at a time.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="num">4</div>
+            <div>
+              <p><strong>Combine the results.</strong> Merge all the answers into one final response.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>Key idea:</strong> An RLM lets the AI model follow this same strategy — skim, split, work on pieces, and combine.</p>
+        </div>
+      </section>
+
+      <!-- Slide 4: How RLM Works (visual) -->
+      <section class="slide" data-title="How">
+        <div class="slide-head">
+          <div>
+            <h3>How it works</h3>
+            <h2>The model becomes a manager, not just a reader</h2>
+          </div>
+          <span class="pill">Recursive = it can keep breaking problems down until they're easy</span>
         </div>
         <div class="grid-2">
           <div class="diagram">
             <div class="diagram-frame">
-              <svg viewBox="0 0 760 420" role="img" aria-label="Recursive language model loop diagram">
+              <svg viewBox="0 0 760 420" role="img" aria-label="Recursive language model overview diagram">
                 <defs>
                   <linearGradient id="rlmNode" x1="0" x2="1" y1="0" y2="1">
                     <stop offset="0%" stop-color="#72d7ff" />
@@ -713,75 +750,98 @@
                     <path d="M0,0 L12,6 L0,12 z" fill="#72d7ff" />
                   </marker>
                 </defs>
+                <!-- You give it a task -->
                 <rect x="22" y="36" width="220" height="120" rx="22" fill="rgba(114,215,255,0.08)" stroke="rgba(157,176,210,0.22)" />
-                <text x="44" y="72" fill="#9db0d2" font-size="18" font-weight="700" letter-spacing="2">QUERY</text>
-                <text x="44" y="108" fill="#e8eefc" font-size="28" font-weight="700">task only</text>
-                <text x="44" y="140" fill="#9db0d2" font-size="18">no raw context embedded</text>
+                <text x="44" y="72" fill="#9db0d2" font-size="18" font-weight="700" letter-spacing="2">YOU</text>
+                <text x="44" y="108" fill="#e8eefc" font-size="26" font-weight="700">"Summarize this"</text>
+                <text x="44" y="138" fill="#9db0d2" font-size="16">+ the long document</text>
 
-                <rect x="258" y="20" width="246" height="156" rx="24" fill="rgba(255,255,255,0.04)" stroke="rgba(157,176,210,0.22)" />
-                <text x="282" y="54" fill="#9db0d2" font-size="16" font-weight="700" letter-spacing="2">ROOT LM</text>
-                <circle cx="318" cy="102" r="22" fill="url(#rlmNode)" />
-                <text x="352" y="96" fill="#e8eefc" font-size="24" font-weight="700">RLM</text>
-                <text x="352" y="124" fill="#9db0d2" font-size="14">writes code + controls</text>
-                <text x="352" y="144" fill="#9db0d2" font-size="14">recursion</text>
+                <!-- The model thinks -->
+                <rect x="280" y="20" width="210" height="156" rx="24" fill="rgba(255,255,255,0.04)" stroke="rgba(157,176,210,0.22)" />
+                <text x="304" y="54" fill="#9db0d2" font-size="16" font-weight="700" letter-spacing="2">AI MODEL</text>
+                <circle cx="340" cy="108" r="22" fill="url(#rlmNode)" />
+                <text x="372" y="102" fill="#e8eefc" font-size="22" font-weight="700">RLM</text>
+                <text x="372" y="126" fill="#9db0d2" font-size="14">splits the work</text>
 
+                <!-- Document stays aside -->
                 <rect x="540" y="30" width="190" height="132" rx="24" fill="rgba(136,247,197,0.07)" stroke="rgba(157,176,210,0.22)" />
-                <text x="562" y="66" fill="#9db0d2" font-size="18" font-weight="700" letter-spacing="2">ENVIRONMENT</text>
-                <text x="562" y="102" fill="#e8eefc" font-size="24" font-weight="700">rlm_context</text>
-                <text x="562" y="132" fill="#9db0d2" font-size="17">stored in a REPL / notebook</text>
+                <text x="562" y="66" fill="#9db0d2" font-size="17" font-weight="700" letter-spacing="2">DOCUMENT</text>
+                <text x="562" y="100" fill="#e8eefc" font-size="22" font-weight="700">kept separate</text>
+                <text x="562" y="128" fill="#9db0d2" font-size="15">model reads pieces on demand</text>
 
+                <!-- Child work -->
                 <rect x="160" y="248" width="198" height="110" rx="22" fill="rgba(255,255,255,0.03)" stroke="rgba(157,176,210,0.22)" />
-                <text x="182" y="276" fill="#9db0d2" font-size="15" font-weight="700" letter-spacing="2">CHILD CALL</text>
-                <text x="182" y="306" fill="#e8eefc" font-size="21" font-weight="700">split / grep</text>
-                <text x="182" y="330" fill="#9db0d2" font-size="15">or recurse on a slice</text>
+                <text x="182" y="276" fill="#9db0d2" font-size="15" font-weight="700" letter-spacing="2">SUB-TASKS</text>
+                <text x="182" y="306" fill="#e8eefc" font-size="21" font-weight="700">work on pieces</text>
+                <text x="182" y="330" fill="#9db0d2" font-size="15">each one is small &amp; focused</text>
 
+                <!-- Final answer -->
                 <rect x="442" y="246" width="258" height="118" rx="22" fill="rgba(114,215,255,0.05)" stroke="rgba(157,176,210,0.22)" />
                 <text x="464" y="274" fill="#9db0d2" font-size="15" font-weight="700" letter-spacing="2">FINAL ANSWER</text>
-                <text x="464" y="306" fill="#e8eefc" font-size="22" font-weight="700">combine child results</text>
-                <text x="464" y="332" fill="#9db0d2" font-size="15">root LM returns one response</text>
+                <text x="464" y="306" fill="#e8eefc" font-size="22" font-weight="700">combine results</text>
+                <text x="464" y="332" fill="#9db0d2" font-size="15">one clean answer back to you</text>
 
-                <path d="M240 96 H258" stroke="#72d7ff" stroke-width="4" marker-end="url(#arrow)" />
-                <path d="M504 98 H540" stroke="#72d7ff" stroke-width="4" marker-end="url(#arrow)" />
+                <path d="M240 96 H280" stroke="#72d7ff" stroke-width="4" marker-end="url(#arrow)" />
+                <path d="M490 98 H540" stroke="#72d7ff" stroke-width="4" marker-end="url(#arrow)" />
                 <path d="M596 162 C596 212, 502 224, 384 246" stroke="#88f7c5" stroke-width="4" fill="none" marker-end="url(#arrow)" />
                 <path d="M384 314 C430 354, 530 360, 600 334" stroke="#72d7ff" stroke-width="4" fill="none" marker-end="url(#arrow)" />
-                <path d="M290 248 C290 214, 314 194, 340 170" stroke="#88f7c5" stroke-width="4" fill="none" marker-end="url(#arrow)" />
+                <path d="M290 248 C290 214, 314 194, 350 170" stroke="#88f7c5" stroke-width="4" fill="none" marker-end="url(#arrow)" />
               </svg>
-            </div>
-            <div class="diagram-caption">
-              <span><strong>Idea:</strong> the root model sees a task, not the whole document.</span>
-              <span>It can recurse into the environment instead of bloating the prompt.</span>
             </div>
           </div>
           <div class="card">
-            <span class="label">What the blog emphasizes</span>
+            <span class="label">What makes this different</span>
             <ul>
-              <li>The prompt is treated as a variable in code, not a giant pasted string.</li>
-              <li>The model can peek, partition, grep, and recurse over the context.</li>
-              <li>Recursive sub-calls are still just model calls from the user’s perspective.</li>
-              <li>The REPL makes the system inspectable and extensible.</li>
+              <li>The document is <strong>not</strong> crammed into the prompt.</li>
+              <li>The model reads only the pieces it needs.</li>
+              <li>Sub-tasks can break down further if they're still too complex.</li>
+              <li>The final answer combines all the small results.</li>
             </ul>
-            <div class="result-badges">
-              <span class="result-badge">API illusion</span>
-              <span class="result-badge">REPL state</span>
-              <span class="result-badge">Recursive sub-calls</span>
-              <span class="result-badge">Externalized context</span>
-            </div>
           </div>
         </div>
       </section>
 
-      <section class="slide" data-title="Patterns">
+      <!-- Slide 5: Side-by-side comparison -->
+      <section class="slide" data-title="Compare">
         <div class="slide-head">
           <div>
-            <h3>Observed behaviors</h3>
-            <h2>RLMs tend to use a small set of reusable strategies</h2>
+            <h3>Side by side</h3>
+            <h2>Traditional LLM vs. RLM</h2>
           </div>
-          <span class="pill">Inspired by the blog’s strategy figures</span>
+          <span class="pill">Same question, different approach</span>
+        </div>
+        <div class="compare">
+          <div class="card">
+            <span class="label">Traditional approach</span>
+            <pre><code># Stuff everything into one prompt
+answer = model("Here is a 50-page report: ...
+Summarize it.")</code></pre>
+            <p>The model sees the <strong>entire document at once</strong>. Details get lost, the prompt may exceed the model's limit, and quality degrades with length.</p>
+          </div>
+          <div class="card">
+            <span class="label">RLM approach</span>
+            <pre><code># Give the model a task + let it
+# work through the document in pieces
+answer = rlm("Summarize this report",
+             fifty_page_report)</code></pre>
+            <p>The model <strong>breaks the work down itself</strong>. Each piece gets focused attention, and results are combined into a final answer.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Strategies the model can use -->
+      <section class="slide" data-title="Strategies">
+        <div class="slide-head">
+          <div>
+            <h3>What the model does</h3>
+            <h2>Simple strategies, powerful results</h2>
+          </div>
+          <span class="pill">The model decides how to break down the work — just like you would</span>
         </div>
         <div class="strategy-grid">
           <div class="strategy-card">
-            <div class="badge-line"><span class="dot"></span><span class="label">Peeking</span></div>
-            <svg viewBox="0 0 520 180" role="img" aria-label="Peeking strategy diagram">
+            <div class="badge-line"><span class="dot"></span><span class="label">Skim first</span></div>
+            <svg viewBox="0 0 520 180" role="img" aria-label="Skim strategy diagram">
               <defs>
                 <marker id="peekArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
                   <path d="M0,0 L12,6 L0,12 z" fill="#72d7ff" />
@@ -789,16 +849,16 @@
               </defs>
               <rect x="18" y="28" width="484" height="126" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(157,176,210,0.18)" />
               <rect x="42" y="60" width="150" height="62" rx="16" fill="rgba(114,215,255,0.13)" stroke="rgba(114,215,255,0.35)" />
-              <text x="62" y="97" fill="#e8eefc" font-size="22" font-weight="700">peek first</text>
+              <text x="62" y="97" fill="#e8eefc" font-size="22" font-weight="700">preview</text>
               <path d="M218 92 H340" stroke="#72d7ff" stroke-width="4" marker-end="url(#peekArrow)" />
               <rect x="344" y="54" width="116" height="76" rx="18" fill="rgba(136,247,197,0.12)" stroke="rgba(136,247,197,0.32)" />
-              <text x="360" y="86" fill="#e8eefc" font-size="18" font-weight="700">inspect</text>
-              <text x="360" y="110" fill="#9db0d2" font-size="14">sample / preview</text>
+              <text x="360" y="86" fill="#e8eefc" font-size="18" font-weight="700">decide</text>
+              <text x="360" y="110" fill="#9db0d2" font-size="14">what to focus on</text>
             </svg>
           </div>
           <div class="strategy-card">
-            <div class="badge-line"><span class="dot"></span><span class="label">Grepping</span></div>
-            <svg viewBox="0 0 520 180" role="img" aria-label="Grepping strategy diagram">
+            <div class="badge-line"><span class="dot"></span><span class="label">Search</span></div>
+            <svg viewBox="0 0 520 180" role="img" aria-label="Search strategy diagram">
               <defs>
                 <marker id="grepArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
                   <path d="M0,0 L12,6 L0,12 z" fill="#88f7c5" />
@@ -806,17 +866,17 @@
               </defs>
               <rect x="18" y="28" width="484" height="126" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(157,176,210,0.18)" />
               <rect x="44" y="52" width="154" height="82" rx="18" fill="rgba(136,247,197,0.08)" stroke="rgba(136,247,197,0.35)" />
-              <text x="62" y="84" fill="#e8eefc" font-size="17" font-weight="700">search text</text>
-              <text x="62" y="108" fill="#9db0d2" font-size="13">regex / keywords</text>
+              <text x="62" y="84" fill="#e8eefc" font-size="17" font-weight="700">find keywords</text>
+              <text x="62" y="108" fill="#9db0d2" font-size="13">search the text</text>
               <path d="M230 92 H340" stroke="#88f7c5" stroke-width="4" marker-end="url(#grepArrow)" />
               <rect x="344" y="56" width="120" height="72" rx="18" fill="rgba(114,215,255,0.13)" stroke="rgba(114,215,255,0.35)" />
-              <text x="360" y="86" fill="#e8eefc" font-size="17" font-weight="700">narrow</text>
-              <text x="360" y="108" fill="#9db0d2" font-size="13">relevant lines</text>
+              <text x="360" y="86" fill="#e8eefc" font-size="17" font-weight="700">extract</text>
+              <text x="360" y="108" fill="#9db0d2" font-size="13">relevant parts</text>
             </svg>
           </div>
           <div class="strategy-card">
-            <div class="badge-line"><span class="dot"></span><span class="label">Partition + map</span></div>
-            <svg viewBox="0 0 520 180" role="img" aria-label="Partition and map strategy diagram">
+            <div class="badge-line"><span class="dot"></span><span class="label">Split &amp; delegate</span></div>
+            <svg viewBox="0 0 520 180" role="img" aria-label="Split and delegate strategy diagram">
               <defs>
                 <marker id="partitionArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
                   <path d="M0,0 L12,6 L0,12 z" fill="#72d7ff" />
@@ -828,18 +888,18 @@
               <rect x="202" y="56" width="68" height="62" rx="14" fill="rgba(114,215,255,0.12)" />
               <rect x="286" y="56" width="68" height="62" rx="14" fill="rgba(114,215,255,0.12)" />
               <path d="M360 87 H430" stroke="#72d7ff" stroke-width="4" marker-end="url(#partitionArrow)" />
-              <text x="42" y="91" fill="#e8eefc" font-size="13" font-weight="700">chunk</text>
-              <text x="126" y="91" fill="#e8eefc" font-size="13" font-weight="700">chunk</text>
-              <text x="210" y="91" fill="#e8eefc" font-size="13" font-weight="700">chunk</text>
-              <text x="294" y="91" fill="#e8eefc" font-size="13" font-weight="700">chunk</text>
+              <text x="42" y="91" fill="#e8eefc" font-size="13" font-weight="700">part 1</text>
+              <text x="126" y="91" fill="#e8eefc" font-size="13" font-weight="700">part 2</text>
+              <text x="210" y="91" fill="#e8eefc" font-size="13" font-weight="700">part 3</text>
+              <text x="294" y="91" fill="#e8eefc" font-size="13" font-weight="700">part 4</text>
               <rect x="432" y="52" width="52" height="70" rx="14" fill="rgba(136,247,197,0.14)" stroke="rgba(136,247,197,0.22)" />
-              <text x="437" y="84" fill="#e8eefc" font-size="12" font-weight="700">map</text>
-              <text x="425" y="136" fill="#9db0d2" font-size="12">child calls</text>
+              <text x="438" y="84" fill="#e8eefc" font-size="12" font-weight="700">each</text>
+              <text x="425" y="136" fill="#9db0d2" font-size="12">gets its own AI call</text>
             </svg>
           </div>
           <div class="strategy-card">
-            <div class="badge-line"><span class="dot"></span><span class="label">Summarization</span></div>
-            <svg viewBox="0 0 520 180" role="img" aria-label="Summarization strategy diagram">
+            <div class="badge-line"><span class="dot"></span><span class="label">Summarize &amp; combine</span></div>
+            <svg viewBox="0 0 520 180" role="img" aria-label="Summarize and combine strategy diagram">
               <defs>
                 <marker id="summaryArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
                   <path d="M0,0 L12,6 L0,12 z" fill="#88f7c5" />
@@ -847,241 +907,88 @@
               </defs>
               <rect x="18" y="28" width="484" height="126" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(157,176,210,0.18)" />
               <rect x="38" y="50" width="136" height="82" rx="18" fill="rgba(136,247,197,0.09)" stroke="rgba(136,247,197,0.32)" />
-              <text x="58" y="83" fill="#e8eefc" font-size="19" font-weight="700">many notes</text>
-              <text x="58" y="107" fill="#9db0d2" font-size="13">context slice</text>
+              <text x="58" y="83" fill="#e8eefc" font-size="19" font-weight="700">many answers</text>
+              <text x="58" y="107" fill="#9db0d2" font-size="13">from each piece</text>
               <path d="M190 91 H304" stroke="#88f7c5" stroke-width="4" marker-end="url(#summaryArrow)" />
               <rect x="308" y="54" width="144" height="72" rx="18" fill="rgba(114,215,255,0.11)" stroke="rgba(114,215,255,0.32)" />
-              <text x="326" y="84" fill="#e8eefc" font-size="17" font-weight="700">short summary</text>
-              <text x="326" y="107" fill="#9db0d2" font-size="13">outer LM decides next step</text>
+              <text x="326" y="84" fill="#e8eefc" font-size="17" font-weight="700">one final answer</text>
+              <text x="326" y="107" fill="#9db0d2" font-size="13">merged and polished</text>
             </svg>
           </div>
         </div>
       </section>
 
-      <section class="slide" data-title="Core idea">
-        <div class="slide-head">
-          <div>
-            <h3>Key concept</h3>
-            <h2>Context lives in the environment, not in the prompt</h2>
-          </div>
-          <span class="pill">This is the central shift</span>
-        </div>
-        <div class="compare">
-          <div class="card">
-            <span class="label">Traditional call</span>
-            <pre><code>response = llm.completion(prompt)
-# prompt contains task + document text</code></pre>
-            <p>The raw document is copied into the prompt every time.</p>
-          </div>
-          <div class="card">
-            <span class="label">RLM call</span>
-            <pre><code>response = rlm.completion(task, context)
-# context is stored externally</code></pre>
-            <p>The model receives a task plus tools for inspecting <code>rlm_context</code>.</p>
-          </div>
-        </div>
-        <div class="grid-3">
-          <div class="card">
-            <span class="label">Data channel</span>
-            <p><code>rlm_context</code> is a Python variable in the REPL.</p>
-          </div>
-          <div class="card">
-            <span class="label">Instruction channel</span>
-            <p>The prompt describes the task and available tools, not the full document.</p>
-          </div>
-          <div class="card">
-            <span class="label">Result</span>
-            <p>Sub-calls can operate on slices without repeatedly re-embedding the entire context.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="slide" data-title="Mechanics">
-        <div class="slide-head">
-          <div>
-            <h3>How it works</h3>
-            <h2>An RLM solves tasks by decomposition</h2>
-          </div>
-          <span class="pill">The model writes code to orchestrate the process</span>
-        </div>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="num">1</div>
-            <div>
-              <p><strong>Receive task + context.</strong> The system injects the context into the execution environment as <code>rlm_context</code>.</p>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="num">2</div>
-            <div>
-              <p><strong>Inspect and split.</strong> The model can slice, search, or divide the context using normal Python.</p>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="num">3</div>
-            <div>
-              <p><strong>Launch child calls.</strong> Small factual lookups can use direct LLM calls; complex sub-problems can recurse again.</p>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="num">4</div>
-            <div>
-              <p><strong>Aggregate answers.</strong> The parent combines intermediate results into a final response.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="slide" data-title="Example">
-        <div class="slide-head">
-          <div>
-            <h3>Minimal example</h3>
-            <h2>The pattern is inspect → split → query → merge</h2>
-          </div>
-          <span class="pill">The full document never becomes a child prompt string</span>
-        </div>
-        <div class="grid-2">
-          <pre><code>mid = len(rlm_context) // 2
-left = rlm_call("Summarize first half", rlm_context[:mid])
-right = rlm_call("Summarize second half", rlm_context[mid:])
-final_answer(left + " " + right)</code></pre>
-          <div class="card">
-            <span class="label">What matters</span>
-            <ul>
-              <li>The parent can choose a splitting strategy dynamically.</li>
-              <li>Each child sees only a smaller slice and a narrower task.</li>
-              <li>The decomposition can continue until the slice is simple enough.</li>
-              <li><span class="bad">Avoid:</span> building child prompts with the entire raw context interpolated into strings.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="slide" data-title="Tools">
-        <div class="slide-head">
-          <div>
-            <h3>Two kinds of sub-calls</h3>
-            <h2>Leaf queries and recursive queries play different roles</h2>
-          </div>
-          <span class="pill">The repo mirrors the paper’s direct vs recursive distinction</span>
-        </div>
-        <div class="compare">
-          <div class="card">
-            <span class="label">Direct leaf call</span>
-            <pre><code>llm_call(sub_task, context_slice)</code></pre>
-            <ul>
-              <li>Fast, one-shot answer on a small slice.</li>
-              <li>Best for extraction, summarization, or local reasoning.</li>
-              <li>Used when the problem is already reduced enough.</li>
-            </ul>
-          </div>
-          <div class="card">
-            <span class="label">Recursive call</span>
-            <pre><code>rlm_call(sub_task, context_slice)</code></pre>
-            <ul>
-              <li>Creates another RLM node with its own REPL state.</li>
-              <li>Useful when a child still needs search, splitting, or aggregation.</li>
-              <li>Builds a call tree instead of a flat prompt.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
+      <!-- Slide 7: Why it matters -->
       <section class="slide" data-title="Benefits">
         <div class="slide-head">
           <div>
-            <h3>Why this is interesting</h3>
-            <h2>RLMs change both scale and robustness</h2>
+            <h3>Why this matters</h3>
+            <h2>Better answers, not just longer inputs</h2>
           </div>
-          <span class="pill">Not just bigger context — better structure</span>
+          <span class="pill">It's not about reading more — it's about working smarter</span>
         </div>
         <div class="grid-2">
           <div class="card">
-            <span class="label">Scalability</span>
+            <span class="label">Works at any scale</span>
             <ul>
-              <li>Operate over data larger than one prompt should reasonably contain.</li>
-              <li>Reuse the same orchestration pattern across summarization, QA, retrieval, and synthesis.</li>
-              <li>Keep each model call focused and local.</li>
+              <li>Handle documents far larger than any model's reading limit.</li>
+              <li>Each sub-task is small, so the model can focus and give better answers.</li>
+              <li>The same approach works for summaries, Q&amp;A, analysis, and more.</li>
             </ul>
           </div>
           <div class="card">
-            <span class="label">Robustness</span>
+            <span class="label">More reliable</span>
             <ul>
-              <li>Data is treated as data, not instruction text.</li>
-              <li>Separating context from the prompt reduces accidental steering by hostile text embedded in documents.</li>
-              <li>Explicit split validation helps prevent bad chunking from cascading into bad answers.</li>
+              <li>Important details don't get buried or missed.</li>
+              <li>The document is kept separate from the instructions, reducing confusion.</li>
+              <li>You can inspect what each step did — it's transparent, not a black box.</li>
             </ul>
           </div>
         </div>
         <div class="callout">
-          <p><strong>Takeaway:</strong> the win is not only “more tokens.” The win is giving the model a structured way to work over external state.</p>
+          <p><strong>Takeaway:</strong> The win isn't just "more text." It's giving the model a structured, human-like way to work through complex tasks.</p>
         </div>
       </section>
 
-      <section class="slide" data-title="Repo mapping">
+      <!-- Slide 8: Let's see it in action -->
+      <section class="slide" data-title="Demo">
         <div class="slide-head">
           <div>
-            <h3>How this repo demonstrates it</h3>
-            <h2>Concepts from the blog map directly into the code and notebooks</h2>
+            <h3>Up next</h3>
+            <h2>Let's see it in action</h2>
           </div>
-          <span class="pill">This deck tees up the live walkthrough</span>
-        </div>
-        <div class="grid-3">
-          <div class="card">
-            <span class="label">Implementation</span>
-            <p><code>src/rlm_smolagent.py</code> injects <code>rlm_context</code> into a smolagents CodeAgent REPL and exposes recursive sub-call tools.</p>
-          </div>
-          <div class="card">
-            <span class="label">Session demos</span>
-            <p><code>notebooks/02</code>, <code>03</code>, and <code>04</code> show decomposition, long-context QA, and plain LLM vs RLM comparisons.</p>
-          </div>
-          <div class="card">
-            <span class="label">Visualization</span>
-            <p><code>src/rlm_visualizer.py</code> and the saved HTML logs show the recursive call tree and the exact LLM requests.</p>
-          </div>
-        </div>
-        <div class="callout">
-          <p><strong>Recommended transition:</strong> after this slide, open the repo, show where <code>rlm_context</code> lives, then run the notebooks to make the abstraction concrete.</p>
-        </div>
-      </section>
-
-      <section class="slide" data-title="Next">
-        <div class="slide-head">
-          <div>
-            <h3>Transition slide</h3>
-            <h2>What to show next</h2>
-          </div>
-          <span class="pill">From concept to implementation</span>
+          <span class="pill">From concept to live demo</span>
         </div>
         <div class="grid-2">
           <div class="card">
-            <span class="label">Code walkthrough</span>
+            <span class="label">What we'll try</span>
             <ol class="plain-list">
-              <li>Show the <code>rlm.completion(task, context)</code> interface.</li>
-              <li>Point out that <code>rlm_context</code> is stored in the REPL, not embedded into the prompt.</li>
-              <li>Show <code>llm_call</code> vs <code>rlm_call</code>.</li>
-              <li>Open the trace visualizer to show the call tree.</li>
+              <li>Give the model a long document and a question.</li>
+              <li>Watch it break the document into pieces automatically.</li>
+              <li>See how it works on each piece and combines the results.</li>
+              <li>Compare the answer quality to a traditional single-shot approach.</li>
             </ol>
           </div>
           <div class="card">
-            <span class="label">Notebook demo</span>
+            <span class="label">What to look for</span>
             <ol class="plain-list">
-              <li>Start with the small decomposition examples.</li>
-              <li>Move to long-context Q&amp;A.</li>
-              <li>Finish with the plain LLM vs RLM comparison.</li>
-              <li>Use the logs to inspect what each node actually saw.</li>
+              <li>How the model decides to split the document.</li>
+              <li>The tree of sub-tasks it creates.</li>
+              <li>Whether the final answer captures details from all sections.</li>
+              <li>How the RLM handles questions a regular model gets wrong.</li>
             </ol>
           </div>
         </div>
         <div class="callout">
-          <p><strong>One-sentence summary:</strong> RLMs let language models work over large external context by recursively turning one hard task into many smaller, inspectable tasks.</p>
+          <p><strong>One-sentence summary:</strong> RLMs let AI models work through large documents by breaking hard problems into many smaller, manageable pieces — just like a person would.</p>
         </div>
       </section>
+    </main>
     </main>
 
     <div class="footerbar">
       <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
-      <div class="slide-count"><span id="slide-count">1 / 9</span></div>
+      <div class="slide-count"><span id="slide-count">1 / 8</span></div>
       <div class="controls">
         <button id="prev-btn" type="button">Previous</button>
         <button id="next-btn" type="button">Next</button>
